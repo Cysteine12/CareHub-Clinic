@@ -89,7 +89,7 @@ const SignUpForm = ({ onSignupComplete }: SignUpFormProps) => {
       console.log('Submitting registration data:', payload)
 
       const { data: resData } = await API.post(
-        `${import.meta.env.VITE_SERVER_URL}/api/auth/patient/register`,
+        `/api/auth/patient/register`,
         allergiesNormalizedPayload
       )
 

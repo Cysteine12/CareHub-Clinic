@@ -1,11 +1,3 @@
-import {
-  Dialog,
-  DialogTrigger,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from './ui/dialog'
 import { Textarea } from './ui/textarea'
 import { Input } from '../components/ui/input'
 import { Button } from './ui/button'
@@ -13,6 +5,7 @@ import { useState } from 'react'
 import { Save } from 'lucide-react'
 import { type SoapNote } from '../lib/schema'
 import { toast } from 'sonner'
+import { useNavigate } from 'react-router-dom'
 import API from '../lib/api'
 
 export default function SoapNoteDialog({
@@ -22,6 +15,7 @@ export default function SoapNoteDialog({
   setAppointmentId,
   showAsDialog = true,
   onSoapNoteSaved,
+  appointment,
 }: {
   appointmentId: string
   vitals: Record<string, any>
@@ -29,7 +23,9 @@ export default function SoapNoteDialog({
   setAppointmentId: React.Dispatch<React.SetStateAction<string | null>>
   showAsDialog?: boolean
   onSoapNoteSaved?: () => void
+  appointment?: any
 }) {
+  const navigate = useNavigate()
   const [soapNote, setSoapNote] = useState<SoapNote>({
     appointment_id: appointmentId,
     subjective: {
@@ -61,6 +57,13 @@ export default function SoapNoteDialog({
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [_saved, setSaved] = useState(false)
 
+  const handleNavigateToVitalsSoap = () => {
+    setAppointmentId(appointmentId)
+    navigate(`/provider/vitals/${appointmentId}`, {
+      state: { appointment }
+    })
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
@@ -85,6 +88,7 @@ export default function SoapNoteDialog({
           physical_exam_report: filterEmpty(
             soapNote.objective?.physical_exam_report
           ),
+          vitals_summary: soapNote.objective?.vitals_summary || {},
           labs: soapNote.objective?.labs || {},
           others: soapNote.objective?.others || '',
         },
@@ -558,25 +562,12 @@ export default function SoapNoteDialog({
   }
 
   return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <Button
-          onClick={() => setAppointmentId(appointmentId)}
-          variant="outline"
-          size="sm"
-        >
-          SOAP Note
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Record SOAP Note</DialogTitle>
-          <DialogDescription>
-            Document the patient's subjective, objective, assessment, and plan.
-          </DialogDescription>
-        </DialogHeader>
-        {soapContent}
-      </DialogContent>
-    </Dialog>
+    <Button
+      onClick={handleNavigateToVitalsSoap}
+      variant="outline"
+      size="sm"
+    >
+      SOAP Note
+    </Button>
   )
 }

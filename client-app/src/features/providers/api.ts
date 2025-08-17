@@ -54,9 +54,7 @@ export {
 }
 
 export const getAppointments = async () => {
-  const { data } = await API.get(
-    `${import.meta.env.VITE_SERVER_URL}/api/appointment/appointments`
-  )
+  const { data } = await API.get(`/api/appointment/appointments`)
 
   if (!data?.success) {
     toast.error(data?.message || 'Failed to fetch appointments')
@@ -67,9 +65,7 @@ export const getAppointments = async () => {
 }
 
 export const getProviders = async () => {
-  const { data } = await API.get(
-    `${import.meta.env.VITE_SERVER_URL}/api/providers`
-  )
+  const { data } = await API.get(`/api/providers`)
 
   if (!data?.success) {
     toast.error(data?.message || 'Failed to fetch providers')

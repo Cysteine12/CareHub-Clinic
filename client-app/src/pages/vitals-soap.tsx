@@ -1,6 +1,6 @@
 import type React from 'react'
 import { useState, useEffect } from 'react'
-import { useParams } from 'react-router'
+import { useParams, useLocation } from 'react-router'
 import {
   Card,
   CardContent,
@@ -41,6 +41,9 @@ export default function VitalsSoapPage({
   const { appointmentId: urlAppointmentId } = useParams<{
     appointmentId: string
   }>()
+  const location = useLocation()
+  const passedAppointment = location.state?.appointment
+  
   const [selectedPatient, setSelectedPatient] = useState('')
   const [searchTerm, setSearchTerm] = useState('')
   const user = useAuthStore((state) => state.user)
@@ -50,7 +53,7 @@ export default function VitalsSoapPage({
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [_hasVitals, setHasVitals] = useState(false)
   const [appointment, setAppointment] = useState<Appointment | null>(
-    propAppointment || null
+    propAppointment || passedAppointment || null
   )
   const [isLoading, setIsLoading] = useState(false)
   const [soapNotes, setSoapNotes] = useState<
@@ -80,6 +83,9 @@ export default function VitalsSoapPage({
     })[]
   >([])
   const [soapNotesLoading, setSoapNotesLoading] = useState(false)
+  
+  // Determine default tab - if navigated from appointment detail, show history
+  const defaultTab = passedAppointment ? 'history' : 'record-vitals'
 
   const fetchSoapNotes = async (appointmentId: string) => {
     setSoapNotesLoading(true)
@@ -108,25 +114,31 @@ export default function VitalsSoapPage({
     const fetchAppointment = async (appointmentId: string) => {
       setIsLoading(true)
       try {
-        const { data } = await API.get(
-          `${import.meta.env.VITE_SERVER_URL}/api/appointment/${appointmentId}`
-        )
+        // Use the correct appointment endpoint
+        const { data } = await API.get(`/api/appointment/${appointmentId}`)
 
         if (data?.success) {
           setAppointment(data.data)
-
           fetchSoapNotes(appointmentId)
         } else {
-          console.error('Failed to fetch appointment:', data.message)
+          console.error('Failed to fetch appointment:', data?.message)
+          toast.error(data?.message || 'Failed to fetch appointment')
         }
       } catch (error) {
         console.error('Error fetching appointment:', error)
+        toast.error('Error fetching appointment data')
       } finally {
         setIsLoading(false)
       }
     }
-
-    if (urlAppointmentId && !propAppointment) {
+    
+    if (passedAppointment) {
+      // Use appointment data passed via navigation state
+      setAppointment(passedAppointment)
+      if (passedAppointment.id) {
+        fetchSoapNotes(passedAppointment.id)
+      }
+    } else if (urlAppointmentId && !propAppointment) {
       fetchAppointment(urlAppointmentId)
     } else if (propAppointment) {
       setAppointment(propAppointment)
@@ -135,7 +147,7 @@ export default function VitalsSoapPage({
         fetchSoapNotes(propAppointment.id)
       }
     }
-  }, [urlAppointmentId, propAppointment])
+  }, [urlAppointmentId, propAppointment, passedAppointment])
 
   useEffect(() => {
     if (appointment?.status) {
@@ -186,7 +198,7 @@ export default function VitalsSoapPage({
         </div>
       </div>
 
-      <Tabs defaultValue="record-vitals" className="space-y-4">
+      <Tabs defaultValue={defaultTab} className="space-y-4">
         <TabsList>
           <TabsTrigger value="record-vitals">Record Vitals</TabsTrigger>
           <TabsTrigger value="soap-notes">SOAP Notes</TabsTrigger>
@@ -203,8 +215,16 @@ export default function VitalsSoapPage({
                     No appointment data available
                   </h2>
                   <p className="text-muted-foreground">
-                    Please select an appointment to view vitals and SOAP notes.
+                    {urlAppointmentId 
+                      ? 'Failed to load appointment data. Please check the appointment ID.' 
+                      : 'Please select an appointment to view vitals and SOAP notes.'}
                   </p>
+                  {/* Debug info */}
+                  <div className="mt-4 text-xs text-gray-500">
+                    <p>Debug: appointmentId = {urlAppointmentId || 'null'}</p>
+                    <p>Debug: passedAppointment = {passedAppointment ? 'present' : 'null'}</p>
+                    <p>Debug: appointment = {appointment ? 'present' : 'null'}</p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -273,106 +293,144 @@ export default function VitalsSoapPage({
         </TabsContent>
 
         <TabsContent value="soap-notes" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <FileText className="mr-2 h-5 w-5" />
-                SOAP Note Documentation
-              </CardTitle>
-              <CardDescription>
-                Subjective, Objective, Assessment, and Plan documentation
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <SoapNoteDialog
-                appointmentId={(appointment as Appointment).id}
-                vitals={(appointment as Appointment).vitals}
-                purposes={
-                  (appointment as Appointment).purposes ||
-                  (appointment as Appointment).other_purpose
-                }
-                setAppointmentId={setAppointmentId || (() => {})}
-                showAsDialog={false}
-                onSoapNoteSaved={() =>
-                  fetchSoapNotes((appointment as Appointment).id)
-                }
-              />
-            </CardContent>
-          </Card>
+          {!appointment || !appointment.id ? (
+            <div className="flex-1 space-y-6 p-6">
+              <div className="flex items-center justify-center h-64">
+                <div className="text-center">
+                  <h2 className="text-lg font-semibold">
+                    No appointment data available
+                  </h2>
+                  <p className="text-muted-foreground">
+                    Please navigate from an appointment to create SOAP notes.
+                  </p>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <FileText className="mr-2 h-5 w-5" />
+                  SOAP Note Documentation
+                </CardTitle>
+                <CardDescription>
+                  Subjective, Objective, Assessment, and Plan documentation
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <SoapNoteDialog
+                  appointmentId={appointment.id}
+                  vitals={appointment.vitals}
+                  purposes={
+                    appointment.purposes ||
+                    appointment.other_purpose
+                  }
+                  setAppointmentId={setAppointmentId || (() => {})}
+                  showAsDialog={false}
+                  onSoapNoteSaved={() =>
+                    fetchSoapNotes(appointment.id)
+                  }
+                />
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         <TabsContent value="history" className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-medium">Patient Records History</h3>
-            <div className="flex items-center space-x-2">
-              <div className="relative">
-                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search records..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-8 w-[300px]"
-                />
+          {!appointment || !appointment.id ? (
+            <div className="flex-1 space-y-6 p-6">
+              <div className="flex items-center justify-center h-64">
+                <div className="text-center">
+                  <h2 className="text-lg font-semibold">
+                    No appointment data available
+                  </h2>
+                  <p className="text-muted-foreground">
+                    Please navigate from an appointment to view SOAP notes history.
+                  </p>
+                  {/* Debug info */}
+                  <div className="mt-4 text-xs text-gray-500">
+                    <p>Debug: appointmentId = {urlAppointmentId || 'null'}</p>
+                    <p>Debug: passedAppointment = {passedAppointment ? JSON.stringify(passedAppointment).substring(0, 100) + '...' : 'null'}</p>
+                    <p>Debug: appointment = {appointment ? JSON.stringify(appointment).substring(0, 100) + '...' : 'null'}</p>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
+          ) : (
+            <>
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-medium">Patient Records History</h3>
+                <div className="flex items-center space-x-2">
+                  <div className="relative">
+                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search records..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-8 w-[300px]"
+                    />
+                  </div>
+                </div>
+              </div>
 
-          <div className="grid">
-            <Card>
-              <CardHeader>
-                <CardTitle>Recent SOAP Notes</CardTitle>
-                <CardDescription>Latest clinical documentation</CardDescription>
-              </CardHeader>
-              <CardContent>
-                {soapNotesLoading ? (
-                  <div className="flex items-center justify-center py-8">
-                    <p className="text-muted-foreground">
-                      Loading SOAP notes...
-                    </p>
-                  </div>
-                ) : soapNotes.length > 0 ? (
-                  <div className="space-y-16">
-                    {soapNotes.map((note, index) => {
-                      const creationEvent = note.events?.find(
-                        (event: any) => event.type === 'SOAP_NOTE_RECORDED'
-                      )
-                      const createdBy = creationEvent?.created_by
-                      const createdAt =
-                        creationEvent?.created_at || note.created_at
+              <div className="grid">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Recent SOAP Notes</CardTitle>
+                    <CardDescription>Latest clinical documentation for {appointment.patient?.first_name} {appointment.patient?.last_name}</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {soapNotesLoading ? (
+                      <div className="flex items-center justify-center py-8">
+                        <p className="text-muted-foreground">
+                          Loading SOAP notes...
+                        </p>
+                      </div>
+                    ) : soapNotes.length > 0 ? (
+                      <div className="space-y-16">
+                        {soapNotes.map((note, index) => {
+                          const creationEvent = note.events?.find(
+                            (event: any) => event.type === 'SOAP_NOTE_RECORDED'
+                          )
+                          const createdBy = creationEvent?.created_by
+                          const createdAt =
+                            creationEvent?.created_at || note.created_at
 
-                      return (
-                        <SoapNoteCard
-                          key={note.appointment_id + index}
-                          soapNote={note}
-                          created_at={createdAt}
-                          updated_at={note.updated_at}
-                          created_by={createdBy}
-                          onUpdate={() => {
-                            if (appointment?.id) {
-                              fetchSoapNotes(appointment.id)
-                            }
-                          }}
-                          onDelete={() => {
-                            if (appointment?.id) {
-                              fetchSoapNotes(appointment.id)
-                            }
-                          }}
-                          canEdit={true}
-                          canDelete={true}
-                        />
-                      )
-                    })}
-                  </div>
-                ) : (
-                  <div className="flex items-center justify-center py-8">
-                    <p className="text-muted-foreground">
-                      No SOAP notes found for this appointment
-                    </p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
+                          return (
+                            <SoapNoteCard
+                              key={note.appointment_id + index}
+                              soapNote={note}
+                              created_at={createdAt}
+                              updated_at={note.updated_at}
+                              created_by={createdBy}
+                              onUpdate={() => {
+                                if (appointment?.id) {
+                                  fetchSoapNotes(appointment.id)
+                                }
+                              }}
+                              onDelete={() => {
+                                if (appointment?.id) {
+                                  fetchSoapNotes(appointment.id)
+                                }
+                              }}
+                              canEdit={true}
+                              canDelete={true}
+                            />
+                          )
+                        })}
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-center py-8">
+                        <p className="text-muted-foreground">
+                          No SOAP notes found for this appointment
+                        </p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+            </>
+          )}
         </TabsContent>
 
         <TabsContent value="templates" className="space-y-4">

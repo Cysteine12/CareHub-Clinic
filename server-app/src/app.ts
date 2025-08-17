@@ -57,9 +57,9 @@ app.use(
     resave: false,
     saveUninitialized: false,
     cookie: {
-      secure: isProduction,
+      secure: false, // isProduction,
       httpOnly: true,
-      sameSite: sameSite,
+      sameSite: 'lax',// sameSite,
       maxAge: config.SESSION_EXPIRATION_HOURS * 60 * 60 * 1000,
       // domain: cookieDomain,
     },

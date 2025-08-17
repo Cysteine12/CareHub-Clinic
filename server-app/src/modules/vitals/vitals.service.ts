@@ -1,7 +1,7 @@
-import type { Vitals, Prisma } from '@prisma/client';
-import prisma from '../../config/prisma.js';
-import type { VitalsRecord } from '../vitals/vitals.validation.js';
-import { EventType } from '@prisma/client';
+import type { Vitals, Prisma } from '@prisma/client'
+import prisma from '../../config/prisma.js'
+import type { VitalsRecord } from '../vitals/vitals.validation.js'
+import { EventType } from '@prisma/client'
 
 export type VitalsCreateInput = Prisma.VitalsCreateInput
 
@@ -9,10 +9,16 @@ export type VitalsCreateInput = Prisma.VitalsCreateInput
 function buildVitals(
   payload: VitalsRecord | undefined,
   createdById: string
-): { create: Omit<VitalsRecord, 'events'> & { events: { create: { type: EventType, created_by_id: string }[] } } } | undefined {
-  if (!payload) return undefined;
+):
+  | {
+      create: Omit<VitalsRecord, 'events'> & {
+        events: { create: { type: EventType; created_by_id: string }[] }
+      }
+    }
+  | undefined {
+  if (!payload) return undefined
 
-  const { events, ...rest } = payload;
+  const { events, ...rest } = payload
 
   return {
     create: {
@@ -22,25 +28,25 @@ function buildVitals(
           {
             type: EventType.VITALS_RECORDED,
             created_by_id: createdById,
-          }
-        ]
-      }
-    }
-  };
+          },
+        ],
+      },
+    },
+  }
 }
 
 async function recordVitals(
-  payload: Prisma.VitalsCreateInput,
+  payload: Prisma.VitalsCreateInput
 ): Promise<Vitals> {
-  const { appointment, ...rest } = payload;
+  const { appointment, ...rest } = payload
 
-  const { created_by_id, events, ...vitalsData } = rest as any;
+  const { created_by_id, ...vitalsData } = rest as any
 
   return prisma.vitals.create({
     data: {
       ...vitalsData,
       created_by: {
-        connect: { id: created_by_id }
+        connect: { id: created_by_id },
       },
       appointment,
       events: {
@@ -48,39 +54,38 @@ async function recordVitals(
           {
             type: EventType.VITALS_RECORDED,
             created_by: {
-              connect: { id: created_by_id }
-            }
-          }
-        ]
-      }
-    }
-  });
+              connect: { id: created_by_id },
+            },
+          },
+        ],
+      },
+    },
+  })
 }
 
 async function getVitalsByAppointmentId(appointmentId: string) {
   return prisma.vitals.findMany({
     where: {
-      appointment_id: appointmentId
+      appointment_id: appointmentId,
     },
     include: {
-      created_by: { 
+      created_by: {
         select: {
           id: true,
           first_name: true,
           last_name: true,
-          role_title: true
-        }
-      }
+          role_title: true,
+        },
+      },
     },
     orderBy: {
-      created_at: "desc"
-    }
-  });
+      created_at: 'desc',
+    },
+  })
 }
-
 
 export default {
   buildVitals,
   recordVitals,
-  getVitalsByAppointmentId
+  getVitalsByAppointmentId,
 }

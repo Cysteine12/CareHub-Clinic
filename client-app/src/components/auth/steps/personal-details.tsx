@@ -82,9 +82,7 @@ const PersonalDetailsStep = ({ onNext, onPrev }: PersonalDetailsStepProps) => {
     const fetchInsuranceProvider = async () => {
       setLoading(true)
       try {
-        const { data } = await API.get(
-          `${import.meta.env.VITE_SERVER_URL}/api/insurance-providers`
-        )
+        const { data } = await API.get(`/api/insurance-providers`)
 
         if (!data?.success) {
           toast.error('Error fetching providers')

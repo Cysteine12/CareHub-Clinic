@@ -46,10 +46,9 @@ const OTPVerification = ({
     }
 
     try {
-      const { data } = await API.post(
-        `${import.meta.env.VITE_SERVER_URL}/api/auth/patient/request-otp`,
-        { email }
-      )
+      const { data } = await API.post(`/api/auth/patient/request-otp`, {
+        email,
+      })
 
       if (!data?.success) {
         return toast.error(data.message || 'Failed to send OTP')
@@ -126,13 +125,10 @@ const OTPVerification = ({
     setIsVerifying(true)
 
     try {
-      const { data } = await API.post(
-        `${import.meta.env.VITE_SERVER_URL}/api/auth/patient/verify-email`,
-        {
-          email,
-          otp: otpString,
-        }
-      )
+      const { data } = await API.post(`/api/auth/patient/verify-email`, {
+        email,
+        otp: otpString,
+      })
 
       if (!data?.success) {
         toast.error(data?.message || 'OTP verification failed')
@@ -162,10 +158,9 @@ const OTPVerification = ({
     setIsResending(true)
 
     try {
-      const { data } = await API.post(
-        `${import.meta.env.VITE_SERVER_URL}/api/auth/patient/request-otp`,
-        { email }
-      )
+      const { data } = await API.post(`/api/auth/patient/request-otp`, {
+        email,
+      })
 
       if (!data?.success) {
         toast.error(data?.message || 'Failed to resend OTP')

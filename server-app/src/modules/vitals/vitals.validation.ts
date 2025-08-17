@@ -1,23 +1,20 @@
-import { z } from 'zod';
-import { EventFullSchema } from '../events/events.validation.js';
+import { z } from 'zod'
 
 export const VitalsRecordSchema = z.object({
-    blood_pressure: z.string().optional(),
-    heart_rate: z.string().optional(),
-    temperature: z.string().optional(), 
-    height: z.string().optional(),
-    weight: z.string().optional(),
-    respiratory_rate: z.string().optional(),
-    oxygen_saturation: z.string().optional(),
-    bmi: z.string().optional(),
-    others: z.string().optional(),
-    created_by_id: z.uuid(),
-    appointment_id: z.uuid(),
-    events: z.array(EventFullSchema).optional().default([])
+  blood_pressure: z.string().optional(),
+  heart_rate: z.string().optional(),
+  temperature: z.string().optional(),
+  height: z.string().optional(),
+  weight: z.string().optional(),
+  respiratory_rate: z.string().optional(),
+  oxygen_saturation: z.string().optional(),
+  bmi: z.string().optional(),
+  others: z.string().optional(),
+  appointment_id: z.uuid(),
 })
 
-export type VitalsRecord = z.infer<typeof VitalsRecordSchema>;
+export type VitalsRecord = z.infer<typeof VitalsRecordSchema>
 
 export default {
-    VitalsRecordSchema
+  VitalsRecordSchema,
 }

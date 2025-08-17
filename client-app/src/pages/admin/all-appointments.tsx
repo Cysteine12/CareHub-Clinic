@@ -107,9 +107,7 @@ export default function Appointments() {
 
   const fetchAppointments = async () => {
     setIsLoading(true)
-    const { data } = await API.get(
-      `${import.meta.env.VITE_SERVER_URL}/api/appointment/appointments`
-    )
+    const { data } = await API.get(`/api/appointment/appointments`)
 
     if (!data?.success) {
       toast.error(data?.message || 'Failed to fetch appointments')

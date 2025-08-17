@@ -36,7 +36,7 @@ const ChangePassword = () => {
     setIsSubmitting(true)
     try {
       const { data: resData } = await API.post(
-        `${import.meta.env.VITE_SERVER_URL}/api/auth/change-password`,
+        `/api/auth/change-password`,
         data
       )
 

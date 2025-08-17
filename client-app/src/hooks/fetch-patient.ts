@@ -8,6 +8,7 @@ export const useCheckPatientProfile = () => {
   const navigate = useNavigate()
   const { user, setUser } = useAuthStore()
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   const firstLoad = useRef(true)
 
@@ -19,24 +20,41 @@ export const useCheckPatientProfile = () => {
       }
 
       try {
+        console.log('Fetching patient profile...')
         const { data, status } = await API.get('/api/auth/patient/profile')
 
         if (!data?.success) {
-          if (status === 401 && !firstLoad.current) {
+          const errorMsg = 'Failed to load profile. Please sign in.'
+          setError(errorMsg)
+          
+          if (status === 401) {
+            console.log('Authentication failed, redirecting to login')
             toast.error('Session expired. Please sign in.')
             navigate('/login')
+          } else {
+            console.log('Profile fetch failed:', data)
+            if (!firstLoad.current) {
+              toast.error(errorMsg)
+              navigate('/login')
+            }
           }
           return
         }
 
+        console.log('Patient profile loaded:', data.data)
         setUser(data.data)
+        setError(null)
       } catch (error) {
+        console.error('Error fetching patient profile:', error)
+        const message = error instanceof Error ? error.message : 'Session expired. Please sign in.'
+        setError(message)
+        
         if (!firstLoad.current) {
-          const message =
-            error instanceof Error
-              ? error.message
-              : 'Session expired. Please sign in.'
           toast.error(message)
+          navigate('/login')
+        } else {
+          // Even on first load, navigate if it's clearly an auth error
+          toast.error('Please sign in to continue')
           navigate('/login')
         }
       } finally {
@@ -48,32 +66,37 @@ export const useCheckPatientProfile = () => {
     fetchProfile()
   }, [user, setUser, navigate])
 
-  return { user, loading }
+  return { user, loading, error }
 }
 
 export const usePatientProfile = () => {
   const navigate = useNavigate()
   const { user, setUser } = useAuthStore()
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const logout = useAuthStore((state) => state.logout)
 
   useEffect(() => {
     const fetchProfile = async () => {
       try {
+        console.log('Fetching patient profile with usePatientProfile...')
         const { data } = await API.get('/api/auth/patient/profile')
 
         if (!data || !data.success) {
-          toast.error('Session expired. Please sign in.')
+          const errorMsg = 'Session expired. Please sign in.'
+          setError(errorMsg)
+          toast.error(errorMsg)
           navigate('/login')
           return
         }
 
+        console.log('Patient profile loaded successfully:', data.data)
         setUser(data.data)
+        setError(null)
       } catch (error) {
-        const message =
-          error instanceof Error
-            ? error.message
-            : 'Session expired. Please sign in.'
+        console.error('Error in usePatientProfile:', error)
+        const message = error instanceof Error ? error.message : 'Session expired. Please sign in.'
+        setError(message)
         toast.error(message)
         navigate('/login')
       } finally {
@@ -82,7 +105,7 @@ export const usePatientProfile = () => {
     }
 
     fetchProfile()
-  }, [])
+  }, [navigate, setUser])
 
   const logOut = async () => {
     try {
@@ -99,5 +122,5 @@ export const usePatientProfile = () => {
     }
   }
 
-  return { user, loading, logOut }
+  return { user, loading, logOut, error }
 }
