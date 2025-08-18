@@ -239,7 +239,7 @@ model Event {
   id            String              @id @default(uuid())
   type          EventType
   appointment_id String
-  created_by_id String
+  created_by_id String?
   status        String?
   vital_id      String?
   soap_note_id  String?
@@ -247,7 +247,7 @@ model Event {
   updated_at    DateTime            @updatedAt
 
   appointment   Appointment         @relation(fields: [appointment_id], references: [id])
-  created_by    Provider            @relation(fields: [created_by_id], references: [id])
+  created_by    Provider?           @relation(fields: [created_by_id], references: [id])
   soap_note     SoapNote?           @relation(fields: [soap_note_id], references: [id])
   vitals        Vital?              @relation(fields: [vital_id], references: [id])
 

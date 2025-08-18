@@ -4,9 +4,7 @@ import prisma from './config/prisma.js'
 import {
   AppointmentPurpose,
   AppointmentStatus,
-  Prisma,
-  type Appointment,
-  type Patient,
+  EventType,
 } from '@prisma/client'
 import emailService from './services/email.service.js'
 import { addDays } from 'date-fns'
@@ -67,17 +65,29 @@ cron.schedule('0 7 * * *', async () => {
 cron.schedule('0 19 * * *', async () => {
   logger.info('Running appointment no-show cron job at 7:00PM')
 
-  const noShowAppointments = await prisma.appointment.updateManyAndReturn({
-    where: {
-      status: AppointmentStatus.SCHEDULED,
-      schedule: { path: ['appointment_date'], lte: new Date() },
-    },
-    data: { status: AppointmentStatus.NO_SHOW },
-    select: {
-      schedule: true,
-      purposes: true,
-      patient: { select: { email: true, first_name: true } },
-    },
+  const noShowAppointments = await prisma.$transaction(async (tx) => {
+    const updatedAppointments = await tx.appointment.updateManyAndReturn({
+      where: {
+        status: AppointmentStatus.SCHEDULED,
+        schedule: { path: ['appointment_date'], lte: new Date() },
+      },
+      data: { status: AppointmentStatus.NO_SHOW },
+      select: {
+        id: true,
+        schedule: true,
+        purposes: true,
+        patient: { select: { email: true, first_name: true } },
+      },
+    })
+    await tx.event.createMany({
+      data: updatedAppointments.map((appointment) => ({
+        appointment_id: appointment.id,
+        type: EventType.APPOINTMENT_STATUS_CHANGED,
+        status: AppointmentStatus.NO_SHOW,
+      })),
+    })
+
+    return updatedAppointments
   })
 
   const emailPromises = noShowAppointments.map((appointment) => {
