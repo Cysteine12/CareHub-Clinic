@@ -58,10 +58,10 @@ model Provider {
   created_at            DateTime          @default(now())
   updated_at            DateTime          @updatedAt
 
-  appointment_providers   AppointmentProviders[]
-  updated_soap_notes      SoapNote[]        @relation("SoapNoteUpdatedBy")
-  updated_vitals          Vitals[]          @relation("VitalsUpdatedBy")
-  created_events          Events[]           @relation("EventCreatedBy")
+  appointment_providers AppointmentProvider[]
+  soap_notes            SoapNote[]
+  vitals                Vital[]      
+  events                Event[]          
 
   role                  ProviderRole      @relation(fields: [role_title], references: [title])
 
@@ -117,37 +117,39 @@ enum TokenType {
 
 model Appointment {
   id                       String                       @id @default(uuid())
-  patient                  Patient                      @relation(fields: [patient_id], references: [id])
   patient_id               String
+  schedule                 Json
   purposes                 AppointmentPurpose[]
   other_purpose            String?
-  status                   AppointmentStatus           @default(SUBMITTED)
+  status                   AppointmentStatus            @default(SUBMITTED)
   has_insurance            Boolean
-  is_follow_up_required    Boolean?                    @default(false)
-  follow_up_id             String?
-  follow_up_appointment    Appointment?                 @relation("FollowUp", fields: [follow_up_id], references: [id])
-  follow_up_appointments   Appointment[]                @relation("FollowUp")
-  schedule                 Json
-  soap_note                SoapNote[]
-  vitals                   Vitals?
-  vitals_id                String?                      @unique
+  is_follow_up_required    Boolean?                     @default(false)
+  followed_up_appointment_id String?                    @unique                  
   calendar_event_id        String?
-  events                   Events[]
-  appointment_providers    AppointmentProviders[]
   created_at               DateTime                     @default(now())
   updated_at               DateTime                     @updatedAt
+
+  events                   Event[]
+  soap_notes               SoapNote[]
+  appointment_providers    AppointmentProvider[]
+
+  patient                  Patient                      @relation(fields: [patient_id], references: [id])
+  vital                    Vital? 
+  follow_up_appointment    Appointment?                 @relation("FollowUpAppointment")
+  followed_up_appointment  Appointment?                 @relation("FollowUpAppointment", fields: [followed_up_appointment_id], references: [id])
 
   @@map("appointments")
 }
 
 enum AppointmentPurpose {
   ROUTINE_HEALTH_CHECKUP                  @map("ROUTINE HEALTH CHECKUP")
+  MEDICAL_CONSULTATION_AND_TREATMENT      @map("MEDICAL CONSULTATION AND TREATMENT")
+  FOLLOWUP_APPOINTMENT                    @map("FOLLOWUP APPOINTMENT")
   MATERNAL_CHILD_HEALTH                   @map("MATERNAL & CHILD HEALTH")
   IMMUNIZATIONS_AND_VACCINATIONS          @map("IMMUNIZATIONS AND VACCINATIONS")
   FAMILY_PLANNING                         @map("FAMILY PLANNING")
   HIV_AIDS_COUNSELING_AND_TESTING         @map("HIV AIDS COUNSELING AND TESTING")
   TUBERCULOSIS_SCREENING_AND_TREATMENT    @map("TUBERCULOSIS SCREENING AND TREATMENT")
-  MEDICAL_CONSULTATION_AND_TREATMENT      @map("MEDICAL CONSULTATION AND TREATMENT")
   NUTRITION_COUNSELING_AND_SUPPORT        @map("NUTRITION COUNSELING AND SUPPORT")
   CHRONIC_DISEASE_MANAGEMENT              @map("CHRONIC DISEASE MANAGEMENT")
   MENTAL_HEALTH_SUPPORT_OR_COUNSELING     @map("MENTAL HEALTH SUPPORT OR COUNSELING")
@@ -157,7 +159,6 @@ enum AppointmentPurpose {
   MALARIA_DIAGNOSIS_AND_TREATMENT         @map("MALARIA DIAGNOSIS AND TREATMENT")
   HEALTH_SCREENING_CAMPAIGNS              @map("HEALTH SCREENING CAMPAIGNS")
   DRUG_OR_SUBSTANCE_ABUSE_COUNSELING      @map("DRUG OR SUBSTANCE ABUSE COUNSELING")
-  FOLLOWUP_APPOINTMENT                    @map("FOLLOWUP APPOINTMENT")
   DENTAL_CARE                             @map("DENTAL CARE")
   REFERRAL
   OTHERS
@@ -166,49 +167,51 @@ enum AppointmentPurpose {
 enum AppointmentStatus {
   SUBMITTED
   SCHEDULED
-  CHECKED_IN @map("CHECKED IN")
+  CHECKED_IN    @map("CHECKED IN")
   CANCELLED
   RESCHEDULED
   ATTENDING
-  NO_SHOW    @map("NO SHOW")
+  ATTENDED
+  NO_SHOW       @map("NO SHOW")
   COMPLETED
   CONFIRMED
 }
 
-model AppointmentProviders {
+model AppointmentProvider {
   id              String      @id @default(uuid())
   appointment_id  String
-  appointment     Appointment @relation(fields: [appointment_id], references: [id])
   provider_id     String
-  provider        Provider    @relation(fields: [provider_id], references: [id])
   created_at      DateTime    @default(now())
   updated_at      DateTime    @updatedAt
 
+  provider        Provider    @relation(fields: [provider_id], references: [id])
+  appointment     Appointment @relation(fields: [appointment_id], references: [id])
+
   @@unique([appointment_id, provider_id])
-  @@map("appointmentproviders")
+  @@map("appointment_providers")
 }
 
 model SoapNote {
-  id             String      @id @default(uuid())
-  appointment    Appointment @relation(fields: [appointment_id], references: [id])
+  id             String       @id @default(uuid())
   appointment_id String
   subjective     Json?
   objective      Json?
   assessment     Json?
   plan           Json?
-  created_by_id  String?
-  created_by     Provider?   @relation("SoapNoteUpdatedBy", fields: [created_by_id], references: [id])
-  created_at     DateTime    @default(now())
-  updated_at     DateTime?   @updatedAt
-  events         Events[]
+  created_by_id  String
+  created_at     DateTime     @default(now())
+  updated_at     DateTime     @updatedAt
 
-  @@map("soapnotes")
+  events         Event[]
+
+  created_by     Provider     @relation(fields: [created_by_id], references: [id])
+  appointment    Appointment  @relation(fields: [appointment_id], references: [id])
+
+  @@map("soap_notes")
 }
 
-model Vitals {
+model Vital {
   id                      String      @id @default(uuid())
-  appointment             Appointment @relation(fields: [appointment_id], references: [id])
-  appointment_id          String      @unique
   blood_pressure          String?
   heart_rate              String?
   temperature             String?
@@ -218,48 +221,56 @@ model Vitals {
   oxygen_saturation       String?
   bmi                     String?
   others                  String?
-  created_by_id           String?
-  created_by              Provider?   @relation("VitalsUpdatedBy", fields: [created_by_id], references: [id])
+  appointment_id          String      @unique
+  created_by_id           String
   created_at              DateTime    @default(now())
-  updated_at              DateTime?   @updatedAt
-  events                  Events[]
+  updated_at              DateTime    @updatedAt
+
+  events                  Event[]
+
+  created_by              Provider    @relation(fields: [created_by_id], references: [id])
+  appointment             Appointment @relation(fields: [appointment_id], references: [id])
 
   @@map("vitals")
 }
 
-model Events {
+model Event {
   id            String              @id @default(uuid())
   type          EventType
+  appointment_id String
   created_by_id String
-  created_by    Provider            @relation("EventCreatedBy", fields: [created_by_id], references: [id])
-  vitals_id     String?
-  vitals        Vitals?             @relation(fields: [vitals_id], references: [id])
+  status        String?
+  vital_id      String?
   soap_note_id  String?
+  created_at    DateTime            @default(now())
+  updated_at    DateTime            @updatedAt
+
+  appointment   Appointment         @relation(fields: [appointment_id], references: [id])
+  created_by    Provider            @relation(fields: [created_by_id], references: [id])
   soap_note     SoapNote?           @relation(fields: [soap_note_id], references: [id])
-  appointment_id  String?
-  appointment     Appointment?      @relation(fields: [appointment_id], references: [id])
-  created_at    DateTime    @default(now())
-  updated_at    DateTime?   @updatedAt
-  status                   String?
+  vitals        Vital?              @relation(fields: [vital_id], references: [id])
 
   @@map("events")
 }
 
 enum EventType {
   VITALS_RECORDED               @map("VITALS RECORDED")
+  VITALS_UPDATED                @map("VITALS UPDATED")
   SOAP_NOTE_RECORDED            @map("SOAP NOTE RECORDED")
   SOAP_NOTE_UPDATED             @map("SOAP NOTE UPDATED")
   APPOINTMENT_STATUS_CHANGED    @map("APPOINTMENT STATUS CHANGED")
 }
 
 model InsuranceProvider {
-  id            String              @id @default(uuid())
+  id            String          @id @default(uuid())
   name          String
   description   String
-  created_at    DateTime    @default(now())
-  updated_at    DateTime?   @updatedAt
+  created_at    DateTime        @default(now())
+  updated_at    DateTime        @updatedAt
 
   patients      Patient[]
+
+  @@map("insurance_providers")
 }
 
 model CalendarToken {
@@ -270,4 +281,6 @@ model CalendarToken {
   updated_at    DateTime        @updatedAt
 
   patient       Patient         @relation(fields: [patient_id], references: [id])
+
+  @@map("calendar_tokens")
 }
