@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-export const VitalsRecordSchema = z.object({
+export const recordVitalSchema = z.object({
   blood_pressure: z.string().optional(),
   heart_rate: z.string().optional(),
   temperature: z.string().optional(),
@@ -13,8 +13,8 @@ export const VitalsRecordSchema = z.object({
   appointment_id: z.uuid(),
 })
 
-export type VitalsRecord = z.infer<typeof VitalsRecordSchema>
+export type RecordVitalSchema = z.infer<typeof recordVitalSchema>
 
 export default {
-  VitalsRecordSchema,
+  recordVitalSchema,
 }

@@ -15,7 +15,7 @@ import {
   patientAppointmentRoute,
   providerAppointmentRoute,
 } from './modules/appointment/index.js'
-import { vitalsRoute } from './modules/vitals/index.js'
+import { vitalRoute } from './modules/vital/index.js'
 import { insuranceProviderRoute } from './modules/insuranceProvider/index.js'
 import { providerRoute } from './modules/provider/index.js'
 import { patientRoute } from './modules/patient/index.js'
@@ -79,9 +79,7 @@ app.use('/api/patients', patientRoute)
 app.use('/api/user', userRoute)
 app.use('/api/patient/appointments', patientAppointmentRoute)
 app.use('/api/provider/appointments', providerAppointmentRoute)
-app.use('/api/provider/vitals', vitalsRoute)
-app.use('/api/provider/soapnotes', soapNoteRoute)
-app.use('/api/vitals', vitalsRoute)
+app.use('/api/vitals', vitalRoute)
 app.use('/api/soapnotes', soapNoteRoute)
 
 app.use(notFoundHandler)
