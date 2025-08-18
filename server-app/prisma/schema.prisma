@@ -122,7 +122,7 @@ model Appointment {
   purposes                 AppointmentPurpose[]
   other_purpose            String?
   status                   AppointmentStatus            @default(SUBMITTED)
-  has_insurance            Boolean
+  has_insurance            Boolean?
   is_follow_up_required    Boolean?                     @default(false)
   followed_up_appointment_id String?                    @unique                  
   calendar_event_id        String?

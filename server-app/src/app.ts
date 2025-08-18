@@ -11,8 +11,10 @@ import {
   patientAuthRoute,
   providerAuthRoute,
 } from './modules/auth/index.js'
-import { appointmentRoute } from './modules/appointment/index.js'
-import { appointmentProviderRoute } from './modules/appointment/index.js'
+import {
+  patientAppointmentRoute,
+  providerAppointmentRoute,
+} from './modules/appointment/index.js'
 import { vitalsRoute } from './modules/vitals/index.js'
 import { insuranceProviderRoute } from './modules/insuranceProvider/index.js'
 import { providerRoute } from './modules/provider/index.js'
@@ -75,8 +77,8 @@ app.use('/api/insurance-providers', insuranceProviderRoute)
 app.use('/api/providers', providerRoute)
 app.use('/api/patients', patientRoute)
 app.use('/api/user', userRoute)
-app.use('/api/appointment', appointmentRoute)
-app.use('/api/provider/appointment', appointmentProviderRoute)
+app.use('/api/patient/appointments', patientAppointmentRoute)
+app.use('/api/provider/appointments', providerAppointmentRoute)
 app.use('/api/provider/vitals', vitalsRoute)
 app.use('/api/provider/soapnotes', soapNoteRoute)
 app.use('/api/vitals', vitalsRoute)
