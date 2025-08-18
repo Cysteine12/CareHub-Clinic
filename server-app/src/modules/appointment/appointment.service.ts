@@ -33,6 +33,7 @@ const findAppointment = async (
 ): Promise<Appointment | null> => {
   return await prisma.appointment.findUnique({
     where: filter,
+    include: { events: true, vital: true, soap_notes: true },
   })
 }
 

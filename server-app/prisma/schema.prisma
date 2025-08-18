@@ -193,11 +193,11 @@ model AppointmentProvider {
 
 model SoapNote {
   id             String       @id @default(uuid())
-  appointment_id String
   subjective     Json?
   objective      Json?
   assessment     Json?
   plan           Json?
+  appointment_id String
   created_by_id  String
   created_at     DateTime     @default(now())
   updated_at     DateTime     @updatedAt
@@ -207,6 +207,7 @@ model SoapNote {
   created_by     Provider     @relation(fields: [created_by_id], references: [id])
   appointment    Appointment  @relation(fields: [appointment_id], references: [id])
 
+  @@unique([appointment_id, created_by_id])
   @@map("soap_notes")
 }
 
