@@ -1,12 +1,12 @@
 import bcrypt from 'bcryptjs'
-import catchAsync from '../../utils/catchAsync.js'
-import authService from './auth.service.js'
-import emailService from '../../services/email.service.js'
-import { generateOTP } from './auth.util.js'
+import catchAsync from '../../../utils/catchAsync.js'
+import authService from '../auth.service.js'
+import emailService from '../../../services/email.service.js'
+import { generateOTP } from '../auth.util.js'
 import {
   NotFoundError,
   ValidationError,
-} from '../../middlewares/errorHandler.js'
+} from '../../../middlewares/errorHandler.js'
 import type {
   ChangePasswordSchema,
   ForgotPasswordSchema,
@@ -16,14 +16,13 @@ import type {
   RequestOTPSchema,
   ResetPasswordSchema,
   VerifyEmailSchema,
-} from './auth.validation.js'
+} from '../auth.validation.js'
 import { TokenType } from '@prisma/client'
-import providerService from '../provider/provider.service.js'
-import patientService from '../patient/patient.service.js'
-import { UserType } from '../../types/index.js'
-import awsS3 from '../../config/aws-s3.js'
+import patientService from '../../patient/patient.service.js'
+import { UserType } from '../../../types/index.js'
+import awsS3 from '../../../config/aws-s3.js'
 
-const patientRegister = catchAsync(async (req, res) => {
+const register = catchAsync(async (req, res) => {
   let newPatient: PatientRegisterSchema = req.body
 
   const patient = await patientService.findPatient({ email: newPatient.email })
@@ -52,7 +51,7 @@ const patientRegister = catchAsync(async (req, res) => {
   })
 })
 
-const patientLogin = catchAsync(async (req, res) => {
+const login = catchAsync(async (req, res) => {
   let newPatient: LoginSchema = req.body
 
   const patient = await patientService.findPatient({ email: newPatient.email })
@@ -95,55 +94,7 @@ const patientLogin = catchAsync(async (req, res) => {
   })
 })
 
-const patientGetProfile = catchAsync(async (req, res) => {
-  const patientId = req.user?.id
-
-  const patient = await patientService.findPatient({ id: patientId })
-  if (!patient) throw new NotFoundError('User not found')
-
-  if (patient.image_url) {
-    patient.image_url = await awsS3.getPresignedDownloadUrl(patient.image_url)
-  }
-  delete (patient as any).password
-
-  res.status(200).json({
-    success: true,
-    data: patient,
-  })
-})
-
-const patientUpdateProfile = catchAsync(async (req, res) => {
-  const patientId = req.user?.id
-  const newPatient: PatientUpdateProfileSchema = req.body
-
-  const currentPatient = await patientService.findPatient({ id: patientId })
-  if (!currentPatient) throw new NotFoundError('User not found')
-
-  const updatedPatient = await patientService.updatePatient(
-    { id: patientId },
-    newPatient
-  )
-  if (!updatedPatient) throw new NotFoundError('User not found')
-
-  if (newPatient.image_url && currentPatient.image_url) {
-    await awsS3.deleteObject(currentPatient.image_url)
-  }
-
-  if (updatedPatient.image_url) {
-    updatedPatient.image_url = await awsS3.getPresignedDownloadUrl(
-      updatedPatient.image_url
-    )
-  }
-  delete (updatedPatient as any).password
-
-  res.status(200).json({
-    success: true,
-    data: updatedPatient,
-    message: 'Profile updated successfully',
-  })
-})
-
-const patientVerifyEmail = catchAsync(async (req, res) => {
+const verifyEmail = catchAsync(async (req, res) => {
   const { email, otp }: VerifyEmailSchema = req.body
 
   const patient = await patientService.findPatient({ email })
@@ -194,7 +145,7 @@ const patientVerifyEmail = catchAsync(async (req, res) => {
   })
 })
 
-const patientRequestOTP = catchAsync(async (req, res) => {
+const requestOTP = catchAsync(async (req, res) => {
   const { email }: RequestOTPSchema = req.body
 
   const patient = patientService.findPatient({ email })
@@ -215,7 +166,7 @@ const patientRequestOTP = catchAsync(async (req, res) => {
   })
 })
 
-const patientForgotPassword = catchAsync(async (req, res) => {
+const forgotPassword = catchAsync(async (req, res) => {
   const { email }: ForgotPasswordSchema = req.body
 
   const patient = patientService.findPatient({ email })
@@ -236,7 +187,7 @@ const patientForgotPassword = catchAsync(async (req, res) => {
   })
 })
 
-const patientResetPassword = catchAsync(async (req, res) => {
+const resetPassword = catchAsync(async (req, res) => {
   const { email, password, otp }: ResetPasswordSchema = req.body
 
   const token = await authService.findToken({
@@ -269,7 +220,7 @@ const patientResetPassword = catchAsync(async (req, res) => {
   })
 })
 
-const patientChangePassword = catchAsync(async (req, res) => {
+const changePassword = catchAsync(async (req, res) => {
   const { currentPassword, newPassword }: ChangePasswordSchema = req.body
   const { id } = req.user!
 
@@ -291,122 +242,51 @@ const patientChangePassword = catchAsync(async (req, res) => {
   })
 })
 
-const providerLogin = catchAsync(async (req, res) => {
-  let newProvider: LoginSchema = req.body
+const getProfile = catchAsync(async (req, res) => {
+  const patientId = req.user?.id
 
-  const provider = await providerService.findProvider({
-    email: newProvider.email,
+  const patient = await patientService.findPatient({ id: patientId })
+  if (!patient) throw new NotFoundError('User not found')
+
+  if (patient.image_url) {
+    patient.image_url = await awsS3.getPresignedDownloadUrl(patient.image_url)
+  }
+  delete (patient as any).password
+
+  res.status(200).json({
+    success: true,
+    data: patient,
   })
-  if (!provider) throw new ValidationError('Invalid credentials')
+})
 
-  const isMatch = await bcrypt.compare(newProvider.password, provider.password)
-  if (!isMatch) throw new ValidationError('Invalid credentials')
+const updateProfile = catchAsync(async (req, res) => {
+  const patientId = req.user?.id
+  const newPatient: PatientUpdateProfileSchema = req.body
 
-  delete (provider as any).password
+  const currentPatient = await patientService.findPatient({ id: patientId })
+  if (!currentPatient) throw new NotFoundError('User not found')
 
-  req.session.user = {
-    id: provider.id,
-    type: UserType.PROVIDER,
-    roleTitle: provider.role_title,
+  const updatedPatient = await patientService.updatePatient(
+    { id: patientId },
+    newPatient
+  )
+  if (!updatedPatient) throw new NotFoundError('User not found')
+
+  if (newPatient.image_url && currentPatient.image_url) {
+    await awsS3.deleteObject(currentPatient.image_url)
   }
 
-  res.status(200).json({
-    success: true,
-    data: provider,
-    message: 'Login successful',
-  })
-})
-
-const providerProfile = catchAsync(async (req, res) => {
-  const providerId = req.user?.id
-
-  const provider = await providerService.findProvider({ id: providerId })
-  if (!provider) throw new NotFoundError('User not found')
-
-  delete (provider as any).password
-
-  res.status(200).json({
-    success: true,
-    data: provider,
-  })
-})
-
-const providerForgotPassword = catchAsync(async (req, res) => {
-  const { email }: ForgotPasswordSchema = req.body
-
-  const provider = providerService.findProvider({ email })
-  if (!provider) throw new NotFoundError('User not found')
-
-  const { otp, expires_at } = generateOTP()
-
-  await authService.updateOrCreateToken(
-    { email },
-    { otp, email, expires_at, type: TokenType.CHANGE_PASSWORD }
-  )
-
-  await emailService.sendForgotPasswordMail(email, otp)
-
-  res.status(200).json({
-    success: true,
-    message: 'OTP has been sent to your email',
-  })
-})
-
-const providerResetPassword = catchAsync(async (req, res) => {
-  const { email, password, otp }: ResetPasswordSchema = req.body
-
-  const token = await authService.findToken({
-    email,
-    otp,
-    type: TokenType.CHANGE_PASSWORD,
-  })
-  if (!token || token.expires_at < new Date()) {
-    throw new ValidationError('Invalid or expired token. Try again')
+  if (updatedPatient.image_url) {
+    updatedPatient.image_url = await awsS3.getPresignedDownloadUrl(
+      updatedPatient.image_url
+    )
   }
-
-  await authService.deleteToken({ id: token.id })
-
-  const newPassword = await bcrypt.hash(password, 10)
-
-  const updatedProvider = await providerService.updateProvider(
-    { email },
-    { password: newPassword }
-  )
-  if (!updatedProvider) throw new NotFoundError('User not found')
-
-  await emailService.sendPasswordChangedMail(
-    updatedProvider.email,
-    updatedProvider.first_name
-  )
+  delete (updatedPatient as any).password
 
   res.status(200).json({
     success: true,
-    message: 'Password reset successfully',
-  })
-})
-
-const providerChangePassword = catchAsync(async (req, res) => {
-  const { currentPassword, newPassword }: ChangePasswordSchema = req.body
-  const { id } = req.user!
-
-  let provider = await providerService.findProvider({ id })
-  if (!provider) throw new NotFoundError('User not found')
-
-  const isMatch = await bcrypt.compare(currentPassword, provider.password)
-  if (!isMatch) throw new ValidationError('Incorrect password')
-
-  provider.password = await bcrypt.hash(newPassword, 10)
-
-  await providerService.updateProvider({ id }, provider)
-
-  await emailService.sendPasswordChangedMail(
-    provider.email,
-    provider.first_name
-  )
-
-  res.status(200).json({
-    success: true,
-    message: 'Password changed successfully',
+    data: updatedPatient,
+    message: 'Profile updated successfully',
   })
 })
 
@@ -435,20 +315,15 @@ const logout = catchAsync((req, res, next) => {
 })
 
 export default {
-  patientRegister,
-  patientLogin,
-  patientGetProfile,
-  patientUpdateProfile,
-  patientVerifyEmail,
-  patientRequestOTP,
-  patientForgotPassword,
-  patientResetPassword,
-  patientChangePassword,
-  providerLogin,
-  providerProfile,
-  providerForgotPassword,
-  providerResetPassword,
-  providerChangePassword,
+  register,
+  login,
+  verifyEmail,
+  requestOTP,
+  forgotPassword,
+  resetPassword,
+  getProfile,
+  updateProfile,
+  changePassword,
   generateUploadUrl,
   logout,
 }

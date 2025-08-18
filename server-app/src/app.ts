@@ -6,7 +6,11 @@ import { errorHandler, notFoundHandler } from './middlewares/errorHandler.js'
 import { appLogger } from './middlewares/logger.js'
 import session from 'express-session'
 import connectPgSimple from 'connect-pg-simple'
-import { authRoute, googleAuthRoute } from './modules/auth/index.js'
+import {
+  googleAuthRoute,
+  patientAuthRoute,
+  providerAuthRoute,
+} from './modules/auth/index.js'
 import { appointmentRoute } from './modules/appointment/index.js'
 import { appointmentProviderRoute } from './modules/appointment/index.js'
 import { vitalsRoute } from './modules/vitals/index.js'
@@ -44,11 +48,6 @@ app.use(
 app.use(helmet())
 
 app.use(express.json())
-const originUrl = new URL(config.ORIGIN_URL)
-const cookieDomain = originUrl.hostname
-
-const isProduction = config.NODE_ENV === 'production'
-const sameSite = isProduction ? 'none' : 'lax'
 
 const PgSession = connectPgSimple(session)
 app.use(
@@ -57,11 +56,10 @@ app.use(
     resave: false,
     saveUninitialized: false,
     cookie: {
-      secure: false, // isProduction,
+      secure: config.NODE_ENV === 'production',
       httpOnly: true,
-      sameSite: 'lax',// sameSite,
+      sameSite: config.NODE_ENV === 'production' ? 'none' : 'lax',
       maxAge: config.SESSION_EXPIRATION_HOURS * 60 * 60 * 1000,
-      // domain: cookieDomain,
     },
     store: new PgSession({
       conString: config.DATABASE_URL,
@@ -70,16 +68,17 @@ app.use(
   })
 )
 
-app.use('/api/auth', authRoute)
+app.use('/api/auth/patient', patientAuthRoute)
+app.use('/api/auth/provider', providerAuthRoute)
 app.use('/api/auth/google', googleAuthRoute)
 app.use('/api/insurance-providers', insuranceProviderRoute)
 app.use('/api/providers', providerRoute)
 app.use('/api/patients', patientRoute)
+app.use('/api/user', userRoute)
 app.use('/api/appointment', appointmentRoute)
 app.use('/api/provider/appointment', appointmentProviderRoute)
 app.use('/api/provider/vitals', vitalsRoute)
 app.use('/api/provider/soapnotes', soapNoteRoute)
-app.use('/api/user', userRoute)
 app.use('/api/vitals', vitalsRoute)
 app.use('/api/soapnotes', soapNoteRoute)
 
