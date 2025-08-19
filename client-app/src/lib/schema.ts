@@ -73,12 +73,13 @@ export type ResetPasswordData = z.infer<typeof resetPasswordSchema>
 
 export const AppointmentPurpose = {
   ROUTINE_HEALTH_CHECKUP: 'ROUTINE HEALTH CHECKUP',
+  MEDICAL_CONSULTATION_AND_TREATMENT: 'MEDICAL CONSULTATION AND TREATMENT',
+  FOLLOWUP_APPOINTMENT: 'FOLLOWUP APPOINTMENT',
   MATERNAL_CHILD_HEALTH: 'MATERNAL & CHILD HEALTH',
   IMMUNIZATIONS_AND_VACCINATIONS: 'IMMUNIZATIONS AND VACCINATIONS',
   FAMILY_PLANNING: 'FAMILY PLANNING',
   HIV_AIDS_COUNSELING_AND_TESTING: 'HIV AIDS COUNSELING AND TESTING',
   TUBERCULOSIS_SCREENING_AND_TREATMENT: 'TUBERCULOSIS SCREENING AND TREATMENT',
-  MEDICAL_CONSULTATION_AND_TREATMENT: 'MEDICAL CONSULTATION AND TREATMENT',
   NUTRITION_COUNSELING_AND_SUPPORT: 'NUTRITION COUNSELING AND SUPPORT',
   CHRONIC_DISEASE_MANAGEMENT: 'CHRONIC DISEASE MANAGEMENT',
   MENTAL_HEALTH_SUPPORT_OR_COUNSELING: 'MENTAL HEALTH SUPPORT OR COUNSELING',
@@ -89,7 +90,6 @@ export const AppointmentPurpose = {
   MALARIA_DIAGNOSIS_AND_TREATMENT: 'MALARIA DIAGNOSIS AND TREATMENT',
   HEALTH_SCREENING_CAMPAIGNS: 'HEALTH SCREENING CAMPAIGNS',
   DRUG_OR_SUBSTANCE_ABUSE_COUNSELING: 'DRUG OR SUBSTANCE ABUSE COUNSELING',
-  FOLLOWUP_APPOINTMENT: 'FOLLOWUP APPOINTMENT',
   DENTAL_CARE: 'DENTAL CARE',
   REFERRAL: 'REFERRAL',
   OTHERS: 'OTHERS',
@@ -100,19 +100,12 @@ export const appointmentPurposeKeys = Object.keys(AppointmentPurpose) as Array<
 >
 
 export const appointmentSchema = z.object({
-  patient_id: z.object({
-    id: z.string().min(1, 'Patient ID is required'),
-    first_name: z.string().min(1, 'Patient first name is required'),
-    last_name: z.string().min(1, 'Patient last name is required'),
-    insurance_provider_id: z.string().optional(),
-  }),
   schedule: z.object({
-    schedule_count: z.number().default(1).optional(),
-    date: z.string().min(1, 'Date is required'),
-    time: z.string().min(1, 'Time is required'),
+    change_count: z.number().default(0).optional(),
+    date: z.string('Date is required'),
+    time: z.string('Time is required'),
   }),
   purposes: z.enum(appointmentPurposeKeys),
-  has_insurance: z.boolean().default(true).optional(),
   other_purpose: z.string().optional(),
 })
 

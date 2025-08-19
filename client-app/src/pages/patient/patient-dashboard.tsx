@@ -323,7 +323,7 @@ function PatientDashboard() {
                 </div>
               ))}
               <Button
-                onClick={() => navigate('/appointments')}
+                onClick={() => navigate('/appointments?tab=form')}
                 className="w-full bg-transparent"
                 variant="outline"
               >

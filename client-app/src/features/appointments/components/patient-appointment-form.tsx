@@ -71,9 +71,7 @@ const PatientAppointmentForm = ({
       }
 
       toast.success(data?.message)
-      setTimeout(() => {
-        onCompleteSubmit()
-      }, 1000)
+      onCompleteSubmit()
     } catch (error) {
       console.error('See error:', error)
       const message =
@@ -88,7 +86,7 @@ const PatientAppointmentForm = ({
 
   return (
     <form
-      onSubmit={() => handleSubmit(onSubmit)}
+      onSubmit={handleSubmit(onSubmit)}
       className="p-6 rounded-xl space-y-4 text-sm sm:text-base"
     >
       <h2 className="text-start font-semibold text-lg mb-8">New Appointment</h2>

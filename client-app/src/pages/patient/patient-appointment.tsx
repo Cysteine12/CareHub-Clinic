@@ -24,7 +24,7 @@ import {
   type Appointment,
 } from '../../lib/type'
 import API from '../../lib/api'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import PatientAppointmentForm from '../../features/appointments/components/patient-appointment-form'
 
 const recentVisits = [
@@ -47,23 +47,32 @@ const recentVisits = [
 ]
 
 export default function PatientAppointments() {
+  const [searchParams] = useSearchParams()
   const navigate = useNavigate()
   const [tab, setTab] = useState('all')
   const [loading, setLoading] = useState(false)
   const [appointments, setAppointments] = useState<Appointment[]>([])
 
   useEffect(() => {
-    const fetchAppointments = async () => {
-      setLoading(true)
-      const { data } = await API.get(`/api/patient/appointments`)
-
-      if (!data?.success) {
-        toast.error(data?.message || 'Failed to fetch appointments')
-      }
-      setAppointments(data?.data ?? [])
-      setLoading(false)
+    if (searchParams.get('tab')) {
+      setTab(searchParams.get('tab') || 'all')
     }
-    fetchAppointments()
+  }, [])
+
+  useEffect(() => {
+    if (tab === 'all') {
+      const fetchAppointments = async () => {
+        setLoading(true)
+        const { data } = await API.get(`/api/patient/appointments`)
+
+        if (!data?.success) {
+          toast.error(data?.message || 'Failed to fetch appointments')
+        }
+        setAppointments(data?.data ?? [])
+        setLoading(false)
+      }
+      fetchAppointments()
+    }
   }, [tab])
 
   const AppointmentListSkeleton = () => (
@@ -141,18 +150,6 @@ export default function PatientAppointments() {
                       </div>
                       <div className="text-sm text-muted-foreground">
                         {formatTimeToAmPm(appointment.schedule.time)}
-                        {appointment?.appointment_providers?.length > 0 && (
-                          <>
-                            {' '}
-                            with{' '}
-                            {appointment?.appointment_providers
-                              .map((ap) => {
-                                const p = ap?.provider
-                                return `${p?.first_name} ${p?.last_name}`
-                              })
-                              .join(', ')}
-                          </>
-                        )}
                       </div>
                       <div className="text-sm text-muted-foreground">
                         Main Clinic
@@ -165,6 +162,10 @@ export default function PatientAppointments() {
                       variant={
                         appointment.status === 'COMPLETED'
                           ? 'default'
+                          : appointment.status === 'CANCELLED'
+                          ? 'destructive'
+                          : appointment.status === 'SUBMITTED'
+                          ? 'pending'
                           : 'secondary'
                       }
                     >
