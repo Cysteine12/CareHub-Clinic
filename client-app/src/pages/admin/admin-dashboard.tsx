@@ -139,9 +139,7 @@ export default function AdminDashboard() {
                 >
                   <div className="flex items-center space-x-3">
                     <div className="text-sm font-medium">
-                      {formatTimeToAmPm(
-                        appointment?.schedule?.appointment_time
-                      )}
+                      {formatTimeToAmPm(appointment?.schedule?.time)}
                     </div>
                     <div>
                       <div className="font-medium">

@@ -231,8 +231,8 @@ const customPatientWithAppointments: PatientCreateInput = {
         {
           has_insurance: true,
           schedule: {
-            appointment_date: addDays(new Date(), 1),
-            appointment_time: '14:00',
+            date: addDays(new Date(), 1),
+            time: '14:00',
             change_count: 0,
           },
           purposes: [AppointmentPurpose.ROUTINE_HEALTH_CHECKUP],
@@ -241,8 +241,8 @@ const customPatientWithAppointments: PatientCreateInput = {
         {
           has_insurance: true,
           schedule: {
-            appointment_date: new Date(),
-            appointment_time: '12:00',
+            date: new Date(),
+            time: '12:00',
             change_count: 0,
           },
           purposes: [AppointmentPurpose.FAMILY_PLANNING],
@@ -251,8 +251,8 @@ const customPatientWithAppointments: PatientCreateInput = {
         {
           has_insurance: true,
           schedule: {
-            appointment_date: subDays(new Date(), 1),
-            appointment_time: '08:00',
+            date: subDays(new Date(), 1),
+            time: '08:00',
             change_count: 2,
           },
           purposes: [AppointmentPurpose.DENTAL_CARE],

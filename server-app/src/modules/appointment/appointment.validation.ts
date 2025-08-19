@@ -2,7 +2,7 @@ import { AppointmentPurpose, AppointmentStatus } from '@prisma/client'
 import { z } from 'zod'
 
 const appointmentScheduleSchema = z.object({
-  date: z.iso.date('Invalid date format'),
+  date: z.iso.datetime('Invalid date format'),
   time: z.iso.time('Invalid time format'),
   change_count: z.number('Change count is invalid').optional(),
 })

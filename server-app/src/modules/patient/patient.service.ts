@@ -81,7 +81,7 @@ const findPatientStats = async (
     prisma.appointment.findFirst({
       where: {
         patient_id: filter.patient_id,
-        schedule: { path: ['appointment_date'], gte: new Date() },
+        schedule: { path: ['date'], gte: new Date() },
       },
       orderBy: { created_at: 'desc' },
     }),

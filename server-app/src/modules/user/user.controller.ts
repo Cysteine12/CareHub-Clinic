@@ -15,7 +15,7 @@ const dashboard = catchAsync(async (req, res) => {
         prisma.appointment.findFirst({
           where: {
             patient_id: id,
-            schedule: { path: ['appointment_date'], gte: today },
+            schedule: { path: ['date'], gte: today },
           },
           orderBy: { created_at: 'asc' },
         }),
@@ -30,7 +30,7 @@ const dashboard = catchAsync(async (req, res) => {
         prisma.appointment.findMany({
           where: {
             patient_id: id,
-            schedule: { path: ['appointment_date'], gte: today },
+            schedule: { path: ['date'], gte: today },
           },
           orderBy: { created_at: 'asc' },
         }),
@@ -48,9 +48,9 @@ const dashboard = catchAsync(async (req, res) => {
         where: {
           AND: [
             {
-              schedule: { path: ['appointment_date'], gte: startOfDay(today) },
+              schedule: { path: ['date'], gte: startOfDay(today) },
             },
-            { schedule: { path: ['appointment_date'], lte: endOfDay(today) } },
+            { schedule: { path: ['date'], lte: endOfDay(today) } },
           ],
         },
         include: { patient: { select: { first_name: true, last_name: true } } },

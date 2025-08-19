@@ -130,14 +130,10 @@ const sendAppointmentScheduledMail = async (
         This is to inform you that your appointment request has been scheduled for: 
         <br/><br/>
         <li>
-          ${formatInTimeZone(
-            schedule.appointment_date,
-            'Africa/Lagos',
-            'do MMMM, yyyy'
-          )}
+          ${formatInTimeZone(schedule.date, 'Africa/Lagos', 'do MMMM, yyyy')}
         </li>
         <li>
-          ${schedule.appointment_time}
+          ${schedule.time}
         </li>
 
         If this appointment schedule is no longer possible, please feel free to reschedule or cancel here:
@@ -171,10 +167,10 @@ const sendAppointmentReminderMail = async (
         } appointment coming up:
         <br/><br/>
         <li>
-          ${(appointment.schedule as AppointmentSchedule).appointment_date}
+          ${(appointment.schedule as AppointmentSchedule).date}
         </li>
         <li>
-          ${(appointment.schedule as AppointmentSchedule).appointment_time}
+          ${(appointment.schedule as AppointmentSchedule).time}
         </li>
 
         If this appointment schedule is no longer possible, please feel free to reschedule or cancel here:
@@ -208,10 +204,10 @@ const sendAppointmentResheduleRequestMail = async (
         } appointment today scheduled at:
         <br/><br/>
         <li>
-          ${(appointment.schedule as AppointmentSchedule).appointment_date}
+          ${(appointment.schedule as AppointmentSchedule).date}
         </li>
         <li>
-          ${(appointment.schedule as AppointmentSchedule).appointment_time}
+          ${(appointment.schedule as AppointmentSchedule).time}
         </li>
 
         If you would like to reschedule this appointment, please feel free to reschedule here:

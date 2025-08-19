@@ -71,14 +71,15 @@ const AppointmentDetail = () => {
   const queryClient = useQueryClient()
   const [assignedProvider, setAssignedProvider] = useState('')
   const user = useAuthStore((state) => state.user)
-  
+
   // Only fetch providers for admin users to avoid 403 error
   const { data: providersData } = useQuery({
     queryKey: ['providers', 1],
-    queryFn: () => API.get('/api/providers?page=1&limit=200').then(res => res.data),
+    queryFn: () =>
+      API.get('/api/providers?page=1&limit=200').then((res) => res.data),
     enabled: user?.role_title === 'ADMIN',
   })
-  
+
   const [soapNoteSaved, setSoapNoteSaved] = useState(false)
 
   const fetchAppointment = async (id: string) => {
@@ -95,7 +96,7 @@ const AppointmentDetail = () => {
     setProviderId(data.data.appointment_providers[0]?.provider_id)
     return data.data
   }
-  
+
   const {
     data: appointment,
     isLoading,
@@ -183,7 +184,10 @@ const AppointmentDetail = () => {
   // Refetch appointment data when component mounts or ID changes
   useEffect(() => {
     if (id) {
-      console.log('Component mounted/ID changed, invalidating and refetching appointment:', id)
+      console.log(
+        'Component mounted/ID changed, invalidating and refetching appointment:',
+        id
+      )
       // Invalidate the query to force a fresh fetch
       queryClient.invalidateQueries({ queryKey: ['appointment', id] })
       refetch()
@@ -278,7 +282,7 @@ const AppointmentDetail = () => {
 
   const handleViewSoapNotes = () => {
     navigate(`/provider/vitals/${appointment?.id}`, {
-      state: { appointment }
+      state: { appointment },
     })
   }
 
@@ -288,13 +292,15 @@ const AppointmentDetail = () => {
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-            <p className="text-muted-foreground">Loading appointment details...</p>
+            <p className="text-muted-foreground">
+              Loading appointment details...
+            </p>
           </div>
         </div>
       </div>
     )
   }
-  
+
   if (error) {
     return (
       <div className="flex-1 space-y-6 p-6">
@@ -339,13 +345,10 @@ const AppointmentDetail = () => {
             </h1>
             <p className="text-muted-foreground">
               {appointment?.patient?.first_name} •{' '}
-              {appointment?.schedule?.appointment_date
-                ? format(
-                    new Date(appointment.schedule.appointment_date),
-                    'EEE dd'
-                  )
+              {appointment?.schedule?.date
+                ? format(new Date(appointment.schedule.date), 'EEE dd')
                 : 'N/A'}{' '}
-              at {appointment?.schedule?.appointment_time}
+              at {appointment?.schedule?.time}
             </p>
           </div>
         </div>
@@ -442,14 +445,12 @@ const AppointmentDetail = () => {
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">Date:</span>
                   <span>
-                    {new Date(
-                      appointment?.schedule.appointment_date
-                    ).toLocaleDateString()}
+                    {new Date(appointment?.schedule.date).toLocaleDateString()}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">Time:</span>
-                  <span>{appointment?.schedule.appointment_time}</span>
+                  <span>{appointment?.schedule.time}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">Type:</span>
@@ -506,22 +507,28 @@ const AppointmentDetail = () => {
                       ) : (
                         <div className="space-y-2">
                           <div>
-                            <strong>Subjective:</strong> {appointment.soap_note.subjective || 'N/A'}
+                            <strong>Subjective:</strong>{' '}
+                            {appointment.soap_note.subjective || 'N/A'}
                           </div>
                           <div>
-                            <strong>Objective:</strong> {appointment.soap_note.objective || 'N/A'}
+                            <strong>Objective:</strong>{' '}
+                            {appointment.soap_note.objective || 'N/A'}
                           </div>
                           <div>
-                            <strong>Assessment:</strong> {appointment.soap_note.assessment || 'N/A'}
+                            <strong>Assessment:</strong>{' '}
+                            {appointment.soap_note.assessment || 'N/A'}
                           </div>
                           <div>
-                            <strong>Plan:</strong> {appointment.soap_note.plan || 'N/A'}
+                            <strong>Plan:</strong>{' '}
+                            {appointment.soap_note.plan || 'N/A'}
                           </div>
                         </div>
                       )}
                     </div>
                   ) : (
-                    <p className="text-sm text-muted-foreground">No clinical notes available</p>
+                    <p className="text-sm text-muted-foreground">
+                      No clinical notes available
+                    </p>
                   )}
                 </div>
               </CardContent>
@@ -724,7 +731,9 @@ const AppointmentDetail = () => {
                 ) : (
                   <div className="text-center py-4">
                     <p className="text-muted-foreground">
-                      {!user?.id ? "Please log in to record vitals" : "Loading appointment data..."}
+                      {!user?.id
+                        ? 'Please log in to record vitals'
+                        : 'Loading appointment data...'}
                     </p>
                   </div>
                 )}
@@ -757,18 +766,15 @@ const AppointmentDetail = () => {
                       </p>
                     </div>
                     <div className="flex gap-3">
-                      <Button 
-                        variant="outline" 
+                      <Button
+                        variant="outline"
                         onClick={() => setSoapNoteSaved(false)}
                         className="flex-1"
                       >
                         <FileText className="h-4 w-4 mr-2" />
                         Add Another SOAP Note
                       </Button>
-                      <Button 
-                        onClick={handleViewSoapNotes}
-                        className="flex-1"
-                      >
+                      <Button onClick={handleViewSoapNotes} className="flex-1">
                         <Activity className="h-4 w-4 mr-2" />
                         View SOAP Notes
                       </Button>

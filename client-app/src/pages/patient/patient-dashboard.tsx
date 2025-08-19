@@ -191,18 +191,14 @@ function PatientDashboard() {
                 <>
                   <div className="text-2xl font-bold">
                     {formatDate(
-                      `${stats?.nextAppointment.schedule.appointment_date.substring(
+                      `${stats?.nextAppointment.schedule.date.substring(
                         0,
                         10
-                      )}T${
-                        stats?.nextAppointment?.schedule?.appointment_time
-                      }:00.000Z`
+                      )}T${stats?.nextAppointment?.schedule?.time}:00.000Z`
                     )}
                   </div>
                   <p className="text-xs">
-                    {formatTimeToAmPm(
-                      stats?.nextAppointment?.schedule?.appointment_time
-                    )}
+                    {formatTimeToAmPm(stats?.nextAppointment?.schedule?.time)}
                   </p>
                 </>
               ) : (
@@ -307,10 +303,8 @@ function PatientDashboard() {
                     <Calendar className="h-5 w-5 text-blue-500" />
                     <div>
                       <div className="font-medium">
-                        {formatDate(appointment?.schedule?.appointment_date)} at{' '}
-                        {formatTimeToAmPm(
-                          appointment?.schedule?.appointment_time
-                        )}
+                        {formatDate(appointment?.schedule?.date)} at{' '}
+                        {formatTimeToAmPm(appointment?.schedule?.time)}
                       </div>
                       <div className="text-sm text-muted-foreground">
                         {formatPurposeText(appointment?.purposes)}

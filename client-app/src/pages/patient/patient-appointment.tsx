@@ -127,16 +127,10 @@ export default function PatientAppointments() {
                   <div className="flex items-center space-x-4">
                     <div className="text-center">
                       <div className="text-lg font-bold">
-                        {
-                          formatDateParts(appointment.schedule.appointment_date)
-                            .day
-                        }
+                        {formatDateParts(appointment.schedule.date).day}
                       </div>
                       <div className="text-sm text-muted-foreground">
-                        {
-                          formatDateParts(appointment.schedule.appointment_date)
-                            .month
-                        }
+                        {formatDateParts(appointment.schedule.date).month}
                       </div>
                     </div>
                     <div>
@@ -146,9 +140,7 @@ export default function PatientAppointments() {
                           : formatPurposeText(appointment.purposes)}
                       </div>
                       <div className="text-sm text-muted-foreground">
-                        {formatTimeToAmPm(
-                          appointment.schedule.appointment_time
-                        )}
+                        {formatTimeToAmPm(appointment.schedule.time)}
                         {appointment?.appointment_providers?.length > 0 && (
                           <>
                             {' '}

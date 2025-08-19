@@ -226,13 +226,9 @@ const assignAppointmentProvider = catchAsync(async (req, res) => {
           .replace('_', ' ')}. \nVisit ${
           config.ORIGIN_URL
         }/appointments for more details.`,
-        start: (
-          appointment.schedule as AppointmentSchedule
-        ).appointment_date.toString(),
+        start: (appointment.schedule as AppointmentSchedule).date.toString(),
         end: addMinutesToDate(
-          (
-            appointment.schedule as AppointmentSchedule
-          ).appointment_date.toString()
+          (appointment.schedule as AppointmentSchedule).date.toString()
         ),
       })
     }

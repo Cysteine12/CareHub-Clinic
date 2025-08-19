@@ -10,8 +10,8 @@ import emailService from './services/email.service.js'
 import { addDays } from 'date-fns'
 
 export type AppointmentSchedule = {
-  appointment_date: string | Date
-  appointment_time: string
+  date: string | Date
+  time: string
   change_count: number
 }
 
@@ -33,14 +33,14 @@ cron.schedule('0 7 * * *', async () => {
       OR: [
         {
           AND: [
-            { schedule: { path: ['appointment_date'], gte: daysFromNow(2) } },
-            { schedule: { path: ['appointment_date'], lte: daysFromNow(3) } },
+            { schedule: { path: ['date'], gte: daysFromNow(2) } },
+            { schedule: { path: ['date'], lte: daysFromNow(3) } },
           ],
         },
         {
           AND: [
-            { schedule: { path: ['appointment_date'], gte: daysFromNow(0) } },
-            { schedule: { path: ['appointment_date'], lte: daysFromNow(1) } },
+            { schedule: { path: ['date'], gte: daysFromNow(0) } },
+            { schedule: { path: ['date'], lte: daysFromNow(1) } },
           ],
         },
       ],
@@ -69,7 +69,7 @@ cron.schedule('0 19 * * *', async () => {
     const updatedAppointments = await tx.appointment.updateManyAndReturn({
       where: {
         status: AppointmentStatus.SCHEDULED,
-        schedule: { path: ['appointment_date'], lte: new Date() },
+        schedule: { path: ['date'], lte: new Date() },
       },
       data: { status: AppointmentStatus.NO_SHOW },
       select: {

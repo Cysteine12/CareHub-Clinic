@@ -30,8 +30,8 @@ export type Appointment = {
   follow_up_id: string | null
   schedule: {
     schedule_count: number
-    appointment_date: string
-    appointment_time: string
+    date: string
+    time: string
   }
   vitals: object
   created_at: string

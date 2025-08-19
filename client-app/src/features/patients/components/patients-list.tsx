@@ -150,9 +150,7 @@ const PatientsList = ({ searchValue, pagination, setPagination }: Props) => {
                     {patient?.lastVisit ? (
                       <div className="flex items-center text-sm">
                         <Calendar className="mr-1 h-3 w-3" />
-                        {formatDate(
-                          patient?.lastVisit?.schedule?.appointment_date
-                        )}
+                        {formatDate(patient?.lastVisit?.schedule?.date)}
                       </div>
                     ) : (
                       <span className="text-muted-foreground text-sm">
@@ -164,9 +162,7 @@ const PatientsList = ({ searchValue, pagination, setPagination }: Props) => {
                     {patient?.nextAppointment ? (
                       <div className="flex items-center text-sm">
                         <Calendar className="mr-1 h-3 w-3" />
-                        {formatDate(
-                          patient?.nextAppointment?.schedule?.appointment_date
-                        )}
+                        {formatDate(patient?.nextAppointment?.schedule?.date)}
                       </div>
                     ) : (
                       <span className="text-muted-foreground text-sm">

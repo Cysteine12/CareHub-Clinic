@@ -58,7 +58,7 @@ const findProviderStats = async (filter: {
     prisma.appointment.findFirst({
       where: {
         appointment_providers: { some: { provider_id: filter.provider_id } },
-        schedule: { path: ['appointment_date'], lte: new Date() },
+        schedule: { path: ['date'], lte: new Date() },
       },
       orderBy: { updated_at: 'desc' },
     }),
@@ -66,7 +66,7 @@ const findProviderStats = async (filter: {
     prisma.appointment.findFirst({
       where: {
         appointment_providers: { some: { provider_id: filter.provider_id } },
-        schedule: { path: ['appointment_date'], gte: new Date() },
+        schedule: { path: ['date'], gte: new Date() },
       },
       orderBy: { created_at: 'desc' },
     }),

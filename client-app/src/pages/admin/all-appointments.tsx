@@ -38,8 +38,8 @@ export default function Appointments() {
 
   const [formData, setFormData] = useState({
     patient_id: '',
-    appointment_date: '',
-    appointment_time: '',
+    date: '',
+    time: '',
     purposes: '',
     other_purpose: '',
     has_insurance: false,
@@ -57,8 +57,8 @@ export default function Appointments() {
         insurance_provider_id: 'Leads corp',
       },
       schedule: {
-        appointment_date: formData.appointment_date,
-        appointment_time: formData.appointment_time,
+        date: formData.date,
+        time: formData.time,
         schedule_count: 0,
       },
       purposes:
@@ -81,7 +81,7 @@ export default function Appointments() {
     }
     if (filter === 'today') {
       const filteredResults = appointments?.filter((appointment) =>
-        isToday(appointment?.schedule?.appointment_date)
+        isToday(appointment?.schedule?.date)
       )
       setFilteredAppointments(filteredResults)
     }

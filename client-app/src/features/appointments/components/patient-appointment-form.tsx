@@ -39,6 +39,7 @@ const PatientAppointmentForm = ({
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const {
+    register,
     handleSubmit,
     setValue,
     watch,
@@ -47,8 +48,8 @@ const PatientAppointmentForm = ({
     resolver: zodResolver(appointmentSchema),
     defaultValues: {
       schedule: {
-        appointment_date: '',
-        appointment_time: '',
+        date: '',
+        time: '',
       },
       purposes: undefined as keyof typeof AppointmentPurpose | undefined,
       other_purpose: '',
@@ -101,11 +102,11 @@ const PatientAppointmentForm = ({
               type="button"
               className={cn(
                 'w-full rounded-md border border-muted bg-transparent p-2 text-left text-sm hover:bg-transparent text-white',
-                !watch('schedule.appointment_date') && 'text-muted-foreground'
+                !watch('schedule.date') && 'text-muted-foreground'
               )}
             >
-              {watch('schedule.appointment_date') ? (
-                format(new Date(watch('schedule.appointment_date')), 'PPP')
+              {watch('schedule.date') ? (
+                format(new Date(watch('schedule.date')), 'PPP')
               ) : (
                 <span>Select a date</span>
               )}
@@ -116,13 +117,13 @@ const PatientAppointmentForm = ({
             <Calendar
               mode="single"
               selected={
-                watch('schedule.appointment_date')
-                  ? new Date(watch('schedule.appointment_date'))
+                watch('schedule.date')
+                  ? new Date(watch('schedule.date'))
                   : undefined
               }
               onSelect={(date) =>
                 date &&
-                setValue('schedule.appointment_date', date.toISOString(), {
+                setValue('schedule.date', date.toISOString(), {
                   shouldValidate: true,
                 })
               }
@@ -131,9 +132,9 @@ const PatientAppointmentForm = ({
           </PopoverContent>
         </Popover>
 
-        {errors.schedule?.appointment_date && (
+        {errors.schedule?.date && (
           <p className="text-red-500 text-xs">
-            {errors.schedule?.appointment_date.message}
+            {errors.schedule?.date.message}
           </p>
         )}
       </div>
@@ -142,10 +143,8 @@ const PatientAppointmentForm = ({
       <div>
         <Label className="block mb-1 ">Time</Label>
         <Select
-          onValueChange={(value) =>
-            setValue('schedule.appointment_time', value)
-          }
-          defaultValue={watch('schedule.appointment_time')}
+          onValueChange={(value) => setValue('schedule.time', value)}
+          defaultValue={watch('schedule.time')}
         >
           <SelectTrigger className="w-full rounded-md p-2">
             <SelectValue placeholder="Select Time" />
@@ -158,9 +157,9 @@ const PatientAppointmentForm = ({
             ))}
           </SelectContent>
         </Select>
-        {errors.schedule?.appointment_time && (
+        {errors.schedule?.time && (
           <p className="text-red-500 text-xs">
-            {errors.schedule?.appointment_time.message}
+            {errors.schedule?.time.message}
           </p>
         )}
       </div>
@@ -195,11 +194,11 @@ const PatientAppointmentForm = ({
             {watch('purposes') === 'OTHERS' ? '(Required)' : '(Optional)'}
           </Label>
           <Input
-            onChange={(e) => setValue('other_purpose', e.target.value)}
             id="other_purpose"
-            defaultValue={watch('other_purpose')}
+            {...register('other_purpose', {
+              required: watch('purposes') === 'OTHERS',
+            })}
             placeholder="Specify other purpose"
-            required={watch('purposes') === 'OTHERS'}
           />
           {errors.other_purpose && (
             <p className="text-red-600 text-sm mt-1">This field is required</p>

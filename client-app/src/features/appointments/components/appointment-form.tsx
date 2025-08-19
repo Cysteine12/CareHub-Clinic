@@ -17,8 +17,8 @@ import { Checkbox } from '../../../components/ui/checkbox'
 
 type ProviderAppointment = {
   patient_id: string
-  appointment_date: string
-  appointment_time: string
+  date: string
+  time: string
   purposes: string
   other_purpose: string
   has_insurance: boolean
@@ -90,26 +90,24 @@ const AppointmentForm = ({
         </Select>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {'appointment_date' in formData && (
+        {'date' in formData && (
           <div className="space-y-2">
             <Label htmlFor="date">Date *</Label>
             <Input
               id="date"
               type="date"
-              value={formData.appointment_date}
-              onChange={(e) =>
-                handleInputChange('appointment_date', e.target.value)
-              }
+              value={formData.date}
+              onChange={(e) => handleInputChange('date', e.target.value)}
               required
             />
           </div>
         )}
-        {'appointment_time' in formData && (
+        {'time' in formData && (
           <div className="space-y-2">
             <Label htmlFor="time">Time *</Label>
             <Select
-              value={formData.appointment_time}
-              onValueChange={(e) => handleInputChange('appointment_time', e)}
+              value={formData.time}
+              onValueChange={(e) => handleInputChange('time', e)}
               required
             >
               <SelectTrigger>

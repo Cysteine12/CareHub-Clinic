@@ -260,8 +260,8 @@ const ViewPatient = () => {
                   >
                     <div className="flex items-center space-x-3">
                       <div className="text-sm font-medium">
-                        {appointment?.schedule?.appointment_time}{' '}
-                        {formatDate(appointment?.schedule?.appointment_date)}
+                        {appointment?.schedule?.time}{' '}
+                        {formatDate(appointment?.schedule?.date)}
                       </div>
                       <div>
                         {/* <div className="font-medium">{patient.first_name}</div> */}

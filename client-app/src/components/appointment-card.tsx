@@ -21,10 +21,10 @@ export default function AppointmentCard({ appointment }: AppointmentCardProps) {
         {/* Date and Duration */}
         <div className="text-center">
           <div className="text-sm text-muted-foreground">
-            {formatDateParts(appointment.schedule.appointment_date).month}
+            {formatDateParts(appointment.schedule.date).month}
           </div>
           <div className="text-lg font-semibold">
-            {formatDateParts(appointment.schedule.appointment_date).day}
+            {formatDateParts(appointment.schedule.date).day}
           </div>
           <div className="text-xs text-muted-foreground">
             <Clock className="h-3 w-3 inline mr-1" />
