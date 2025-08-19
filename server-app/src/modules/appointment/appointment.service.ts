@@ -1,5 +1,8 @@
 import type { Appointment, Prisma } from '@prisma/client'
 import prisma from '../../config/prisma.js'
+import type { AppointmentScheduleSchema } from './appointment.validation.js'
+import { ValidationError } from '../../middlewares/errorHandler.js'
+import { addMinutes } from 'date-fns'
 
 export type AppointmentWhereInput = Prisma.AppointmentWhereInput
 export type AppointmentFindManyArgs = Prisma.AppointmentFindManyArgs
@@ -33,13 +36,34 @@ const findAppointment = async (
 ): Promise<Appointment | null> => {
   return await prisma.appointment.findUnique({
     where: filter,
-    include: { events: true, vital: true, soap_notes: true },
+    include: {
+      events: true,
+      vital: true,
+      appointment_providers: {
+        include: {
+          provider: {
+            select: { first_name: true, last_name: true, role_title: true },
+          },
+        },
+      },
+      soap_notes: true,
+    },
   })
 }
 
 const createAppointment = async (
-  payload: AppointmentUncheckedCreateInput
+  payload: AppointmentUncheckedCreateInput & {
+    schedule: AppointmentScheduleSchema
+  }
 ): Promise<Appointment> => {
+  const [hours, minutes] = payload.schedule.time.split(':')
+  if (!hours || !minutes) throw new ValidationError('Invalid Time')
+
+  payload.schedule.date = addMinutes(
+    new Date(payload.schedule.date),
+    parseInt(hours) * 60 + parseInt(minutes)
+  ).toDateString()
+
   return await prisma.appointment.create({
     data: payload,
   })
@@ -47,8 +71,17 @@ const createAppointment = async (
 
 const updateAppointment = async (
   filter: AppointmentWhereUniqueInput,
-  payload: AppointmentUpdateInput
+  payload: AppointmentUpdateInput & { schedule?: AppointmentScheduleSchema }
 ): Promise<Appointment | null> => {
+  if (payload.schedule) {
+    const [hours, minutes] = payload.schedule.time.split(':')
+    if (!hours || !minutes) throw new ValidationError('Invalid Time')
+
+    payload.schedule.date = addMinutes(
+      new Date(payload.schedule.date),
+      parseInt(hours) * 60 + parseInt(minutes)
+    ).toDateString()
+  }
   return await prisma.appointment.update({
     where: filter,
     data: payload,
