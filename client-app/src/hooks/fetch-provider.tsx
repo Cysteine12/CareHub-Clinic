@@ -39,7 +39,9 @@ export const useProviderProfile = () => {
 
   const logOut = async () => {
     try {
-      const { data } = await API.post('/api/auth/logout')
+      const { data } = await API.post(
+        `/api/auth/${user?.role_title ? 'provider' : 'patient'}/logout`
+      )
 
       if (!data || !data.success) return toast.error('Logout attempt failed')
 

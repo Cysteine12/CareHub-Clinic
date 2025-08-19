@@ -1,24 +1,6 @@
-import {
-  Search,
-  ArrowLeft,
-  CheckCircle,
-  Eye,
-  Loader2,
-  AlertCircle,
-  CalendarIcon,
-} from 'lucide-react'
+import { Search, ArrowLeft, CheckCircle, Eye, AlertCircle } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Button } from '../../components/ui/button'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import {
-  AppointmentPurpose,
-  appointmentSchema,
-  timeSlots,
-  type AppointmentFormData,
-} from '../../lib/schema'
-import { useNavigate } from 'react-router-dom'
-import { Label } from '../../components/ui/label'
 import {
   Card,
   CardContent,
@@ -27,39 +9,23 @@ import {
 } from '../../components/ui/card'
 import { Badge } from '../../components/ui/badge'
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '../../components/ui/select'
-import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
 } from '../../components/ui/tabs'
 import { toast } from 'sonner'
-import { useAuthStore } from '../../store/auth-store'
-import { Input } from '../../components/ui/input'
 import { Skeleton } from '../../components/ui/skeleton'
 import { Alert } from '../../components/ui/alert'
-import { Calendar } from '../../components/ui/calendar'
-import { format } from 'date-fns'
-import { cn } from '../../lib/utils'
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '../../components/ui/popover'
 import {
   formatDateParts,
   formatPurposeText,
   formatTimeToAmPm,
   type Appointment,
 } from '../../lib/type'
-import { VitalsCard, type VitalsCardProps } from '../../components/vitals-card'
 import API from '../../lib/api'
+import { useNavigate } from 'react-router-dom'
+import PatientAppointmentForm from '../../features/appointments/components/patient-appointment-form'
 
 const recentVisits = [
   {
@@ -81,109 +47,15 @@ const recentVisits = [
 ]
 
 export default function PatientAppointments() {
-  const [tab, setTab] = useState('all')
-  const user = useAuthStore((state) => state.user)
-  const [loading, setLoading] = useState(false)
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [appointments, setAppointments] = useState<Appointment[]>()
-  const [viewVitalsAppointmentId, setViewVitalsAppointmentId] = useState<
-    string | null
-  >(null)
-  const [patientVitals, setPatientVitals] = useState<VitalsCardProps | null>(
-    null
-  )
-  const [, setAppointmentId] = useState<string | null>(null)
-  const [vitalsLoading, setVitalsLoading] = useState<boolean>(false)
-
-  // Handler for cancel button in vitals view
-  const onCancel = () => {
-    setViewVitalsAppointmentId(null)
-    setPatientVitals(null)
-  }
-
-  const {
-    register,
-    handleSubmit,
-    setValue,
-    watch,
-    formState: { errors },
-  } = useForm<AppointmentFormData>({
-    resolver: zodResolver(appointmentSchema),
-    defaultValues: {
-      patient_id: {
-        id: user?.id,
-        insurance_provider_id: user?.insurance_provider_id,
-        first_name: user?.first_name,
-        last_name: user?.last_name,
-      },
-      schedule: {
-        appointment_date: '',
-        appointment_time: '',
-      },
-      purposes: undefined as keyof typeof AppointmentPurpose | undefined,
-      has_insurance: true,
-    },
-  })
-
-  const selectedPurpose = watch('purposes')
   const navigate = useNavigate()
-
-  const onSubmit = async (data: AppointmentFormData) => {
-    setIsSubmitting(true)
-    const endpoint = `/api/appointment/create`
-    const payload = {
-      ...data,
-      purposes: [watch('purposes')], // <-- array, not a string
-    }
-
-    try {
-      const { data } = await API.post(endpoint, payload)
-
-      if (!data?.success) {
-        toast.error(data?.message || 'Failed to create appointment')
-        return
-      }
-
-      toast.success(data?.message)
-      setTimeout(() => {
-        location.assign('/dashboard')
-      }, 1000)
-    } catch (error) {
-      console.error('Sign in error:', error)
-      const message =
-        error instanceof Error
-          ? error.message
-          : 'Invalid email or password. Please try again.'
-      toast.error(message)
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
-
-  const fetchPatientVitals = async (appointmentId: string) => {
-    try {
-      setVitalsLoading(true)
-      const { data } = await API.get(`/api/vitals/${appointmentId}`)
-
-      if (!data || !data.success) {
-        toast.error(data?.message || 'Failed to fetch vitals')
-        return
-      }
-
-      setPatientVitals(data?.data?.[0] ?? null)
-      setViewVitalsAppointmentId(appointmentId)
-    } catch (error) {
-      console.error(error)
-      toast.error('Something went wrong')
-    } finally {
-      setVitalsLoading(false)
-    }
-  }
+  const [tab, setTab] = useState('all')
+  const [loading, setLoading] = useState(false)
+  const [appointments, setAppointments] = useState<Appointment[]>([])
 
   useEffect(() => {
     const fetchAppointments = async () => {
       setLoading(true)
-      const { data } = await API.get(`/api/appointment/appointments`)
+      const { data } = await API.get(`/api/patient/appointments`)
 
       if (!data?.success) {
         toast.error(data?.message || 'Failed to fetch appointments')
@@ -194,7 +66,7 @@ export default function PatientAppointments() {
     fetchAppointments()
   }, [tab])
 
-  const renderSkeleton = () => (
+  const AppointmentListSkeleton = () => (
     <div className="grid gap-6">
       {[1, 2].map((_, i) => (
         <Card key={i}>
@@ -228,7 +100,7 @@ export default function PatientAppointments() {
     </div>
   )
 
-  const renderTable = () => (
+  const AppointmentList = () => (
     <div className="grid gap-6">
       <Card>
         <CardHeader>
@@ -270,21 +142,21 @@ export default function PatientAppointments() {
                     <div>
                       <div className="font-medium">
                         {appointment.purposes.includes('OTHERS')
-                          ? appointment.other_purpose
+                          ? appointment.other_purpose.slice(0, 30)
                           : formatPurposeText(appointment.purposes)}
                       </div>
                       <div className="text-sm text-muted-foreground">
                         {formatTimeToAmPm(
                           appointment.schedule.appointment_time
                         )}
-                        {appointment.appointment_providers.length > 0 && (
+                        {appointment?.appointment_providers?.length > 0 && (
                           <>
                             {' '}
                             with{' '}
-                            {appointment.appointment_providers
+                            {appointment?.appointment_providers
                               .map((ap) => {
-                                const p = ap.provider
-                                return `${p.first_name} ${p.last_name}`
+                                const p = ap?.provider
+                                return `${p?.first_name} ${p?.last_name}`
                               })
                               .join(', ')}
                           </>
@@ -293,54 +165,22 @@ export default function PatientAppointments() {
                       <div className="text-sm text-muted-foreground">
                         Main Clinic
                       </div>
-                      {vitalsLoading ? (
-                        <div className="space-y-2">
-                          <Skeleton className="h-6 w-1/3" />
-                          <Skeleton className="h-5 w-full" />
-                          <Skeleton className="h-4 w-1/2 mt-2" />
-                        </div>
-                      ) : (
-                        viewVitalsAppointmentId === appointment.id &&
-                        !vitalsLoading &&
-                        patientVitals && (
-                          <div className="relative bg-background p-8 rounded-2xl border-2 border-foreground">
-                            <button
-                              onClick={onCancel}
-                              className="absolute text-foreground top-2 right-4 border-2 border-foreground rounded-full w-8 h-8 flex items-center justify-center"
-                            >
-                              X
-                            </button>
-                            <VitalsCard {...patientVitals} />
-                          </div>
-                        )
-                      )}
                     </div>
                   </div>
                   <div className="flex items-center space-x-2">
                     <Badge
                       className="uppercase"
                       variant={
-                        appointment.status === 'CONFIRMED'
+                        appointment.status === 'COMPLETED'
                           ? 'default'
                           : 'secondary'
                       }
                     >
                       {appointment.status}
                     </Badge>
-                    {appointment.status === 'ATTENDING' ? (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setAppointmentId(appointment.id)
-                          fetchPatientVitals(appointment.id)
-                        }}
-                      >
-                        {viewVitalsAppointmentId === appointment.id
-                          ? 'View Vitals'
-                          : 'Show Vitals'}
-                      </Button>
-                    ) : (
+                    {['SUBMITTED', 'SCHEDULED', 'NO_SHOW'].includes(
+                      appointment.status
+                    ) && (
                       <Button variant="outline" size="sm">
                         Reschedule
                       </Button>
@@ -415,163 +255,12 @@ export default function PatientAppointments() {
 
       {/* Tab content below */}
       <TabsContent value="all">
-        {loading ? renderSkeleton() : renderTable()}
+        {loading ? <AppointmentListSkeleton /> : <AppointmentList />}
       </TabsContent>
 
       <TabsContent value="form">
         <Card className="max-w-4xl mx-auto">
-          <form
-            onSubmit={handleSubmit(onSubmit)}
-            className="p-6 rounded-xl space-y-4 text-sm sm:text-base"
-          >
-            <h2 className="text-start font-semibold text-lg mb-8">
-              New Appointment
-            </h2>
-
-            {/* Date */}
-            <div className="">
-              <Label className="mb-1 block">Date</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    type="button"
-                    className={cn(
-                      'w-full rounded-md border border-muted bg-transparent p-2 text-left text-sm hover:bg-transparent text-white',
-                      !watch('schedule.appointment_date') &&
-                        'text-muted-foreground'
-                    )}
-                  >
-                    {watch('schedule.appointment_date') ? (
-                      format(
-                        new Date(watch('schedule.appointment_date')),
-                        'PPP'
-                      )
-                    ) : (
-                      <span>Select a date</span>
-                    )}
-                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    mode="single"
-                    selected={
-                      watch('schedule.appointment_date')
-                        ? new Date(watch('schedule.appointment_date'))
-                        : undefined
-                    }
-                    onSelect={(date) =>
-                      date &&
-                      setValue(
-                        'schedule.appointment_date',
-                        date.toISOString(),
-                        {
-                          shouldValidate: true,
-                        }
-                      )
-                    }
-                    disabled={(date) => date < new Date()}
-                  />
-                </PopoverContent>
-              </Popover>
-
-              {errors.schedule?.appointment_date && (
-                <p className="text-red-500 text-xs">
-                  {errors.schedule?.appointment_date.message}
-                </p>
-              )}
-            </div>
-
-            {/* Time */}
-            <div>
-              <Label className="block mb-1 ">Time</Label>
-              <Select
-                onValueChange={(value) =>
-                  setValue('schedule.appointment_time', value)
-                }
-                defaultValue={watch('schedule.appointment_time')}
-              >
-                <SelectTrigger className="w-full rounded-md p-2">
-                  <SelectValue placeholder="Select Time" />
-                </SelectTrigger>
-                <SelectContent>
-                  {timeSlots().map((slot) => (
-                    <SelectItem key={slot.id} value={slot.id}>
-                      {slot.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {errors.schedule?.appointment_time && (
-                <p className="text-red-500 text-xs">
-                  {errors.schedule?.appointment_time.message}
-                </p>
-              )}
-            </div>
-
-            {/* Purpose */}
-            <div>
-              <Label className="block mb-1 ">Purpose</Label>
-              <Select
-                onValueChange={(value) =>
-                  setValue('purposes', value as keyof typeof AppointmentPurpose)
-                } // value is key
-                defaultValue={watch('purposes')?.[0]}
-              >
-                <SelectTrigger className="w-full rounded-md p-2">
-                  <SelectValue placeholder="Select purpose" />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.entries(AppointmentPurpose).map(([key, label]) => (
-                    <SelectItem key={key} value={key}>
-                      {label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              {errors.purposes && (
-                <p className="text-red-500 text-xs">
-                  {'Please select a purpose'}
-                </p>
-              )}
-
-              {selectedPurpose === 'OTHERS' && (
-                <div className="mt-4">
-                  <Label htmlFor="other_purpose" className="block mb-1">
-                    Please specify
-                  </Label>
-                  <Input
-                    id="other_purpose"
-                    {...register('other_purpose', { required: true })}
-                    placeholder="Specify other purpose"
-                  />
-                  {errors.other_purpose && (
-                    <p className="text-red-600 text-sm mt-1">
-                      This field is required
-                    </p>
-                  )}
-                </div>
-              )}
-            </div>
-
-            <div className="flex gap-2 mt-4 justify-center">
-              <Button
-                type="submit"
-                className="dark:bg-[#2a2348] text-white py-2 rounded-md w-1/2 disabled:bg-[#2a2348]/30"
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="size-6 animate-spin" />
-                    Saving...
-                  </>
-                ) : (
-                  'Save'
-                )}
-              </Button>
-            </div>
-          </form>
+          <PatientAppointmentForm onCompleteSubmit={() => setTab('all')} />
         </Card>
         <Alert
           variant="destructive"

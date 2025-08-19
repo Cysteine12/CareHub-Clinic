@@ -53,7 +53,11 @@ const medications = [
 ]
 function PatientDashboard() {
   const navigate = useNavigate()
-  const { user, loading: userLoading, error: userError } = useCheckPatientProfile()
+  const {
+    user,
+    loading: userLoading,
+    error: userError,
+  } = useCheckPatientProfile()
   const [isLoading, setIsLoading] = useState(false)
   const [stats, setStats] = useState<{
     nextAppointment: Appointment
@@ -65,9 +69,8 @@ function PatientDashboard() {
   const fetchStats = async () => {
     try {
       setIsLoading(true)
-      console.log('Fetching patient dashboard stats...')
       const { data } = await API.get('/api/user/dashboard')
-      console.log('Dashboard stats response:', data)
+
       setStats(data.data)
     } catch (error) {
       console.error('Error fetching dashboard stats:', error)
@@ -105,7 +108,7 @@ function PatientDashboard() {
           <div className="text-center">
             <div className="text-red-500 mb-4">⚠️</div>
             <p className="text-muted-foreground mb-4">{userError}</p>
-            <button 
+            <button
               onClick={() => navigate('/login')}
               className="px-4 py-2 bg-primary text-primary-foreground rounded-md"
             >
@@ -123,8 +126,10 @@ function PatientDashboard() {
       <div className="px-4 mb-12">
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
-            <p className="text-muted-foreground mb-4">Please sign in to continue</p>
-            <button 
+            <p className="text-muted-foreground mb-4">
+              Please sign in to continue
+            </p>
+            <button
               onClick={() => navigate('/login')}
               className="px-4 py-2 bg-primary text-primary-foreground rounded-md"
             >
@@ -229,7 +234,9 @@ function PatientDashboard() {
               <p className="text-xs">
                 Last reading:{' '}
                 {stats?.lastVitals?.created_at
-                  ? formatDate(new Date(stats.lastVitals.created_at).toISOString())
+                  ? formatDate(
+                      new Date(stats.lastVitals.created_at).toISOString()
+                    )
                   : 'N/A'}
               </p>
             </CardContent>
@@ -255,7 +262,9 @@ function PatientDashboard() {
               <p className="text-xs">
                 Last reading:{' '}
                 {stats?.lastVitals?.created_at
-                  ? formatDate(new Date(stats.lastVitals.created_at).toISOString())
+                  ? formatDate(
+                      new Date(stats.lastVitals.created_at).toISOString()
+                    )
                   : 'N/A'}
               </p>
             </CardContent>

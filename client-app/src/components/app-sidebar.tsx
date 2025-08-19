@@ -29,6 +29,7 @@ import {
 import { Link } from 'react-router-dom'
 import { useAuthStore } from '../store/auth-store' // adjust path as needed
 import { cn } from '../lib/utils'
+import { Badge } from './ui/badge'
 
 type MenuItem = {
   title: string
@@ -98,10 +99,15 @@ export function AppSidebar() {
     <Sidebar className="bg-blue-950 border-muted">
       <SidebarHeader>
         <div className="px-2 py-4">
-          <h2 className="text-lg font-semibold">Community Health Clinic</h2>
-          <p className="text-sm text-muted-foreground">
-            {userType ? 'Provider Portal' : 'Patient Portal'}
-          </p>
+          <h2 className="text-lg font-semibold">CareHub Clinic</h2>
+          <div className="flex justify-between">
+            <p className="text-sm text-muted-foreground">
+              {userType ? 'Provider Portal' : 'Patient Portal'}
+            </p>
+            {user?.role_title && (
+              <Badge variant={'outline'}>{user?.role_title}</Badge>
+            )}
+          </div>
         </div>
       </SidebarHeader>
 

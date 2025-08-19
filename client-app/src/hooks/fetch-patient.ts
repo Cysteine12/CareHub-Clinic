@@ -20,15 +20,13 @@ export const useCheckPatientProfile = () => {
       }
 
       try {
-        console.log('Fetching patient profile...')
         const { data, status } = await API.get('/api/auth/patient/profile')
 
         if (!data?.success) {
           const errorMsg = 'Failed to load profile. Please sign in.'
           setError(errorMsg)
-          
+
           if (status === 401) {
-            console.log('Authentication failed, redirecting to login')
             toast.error('Session expired. Please sign in.')
             navigate('/login')
           } else {
@@ -41,14 +39,16 @@ export const useCheckPatientProfile = () => {
           return
         }
 
-        console.log('Patient profile loaded:', data.data)
         setUser(data.data)
         setError(null)
       } catch (error) {
         console.error('Error fetching patient profile:', error)
-        const message = error instanceof Error ? error.message : 'Session expired. Please sign in.'
+        const message =
+          error instanceof Error
+            ? error.message
+            : 'Session expired. Please sign in.'
         setError(message)
-        
+
         if (!firstLoad.current) {
           toast.error(message)
           navigate('/login')
@@ -79,7 +79,6 @@ export const usePatientProfile = () => {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        console.log('Fetching patient profile with usePatientProfile...')
         const { data } = await API.get('/api/auth/patient/profile')
 
         if (!data || !data.success) {
@@ -90,12 +89,13 @@ export const usePatientProfile = () => {
           return
         }
 
-        console.log('Patient profile loaded successfully:', data.data)
         setUser(data.data)
         setError(null)
       } catch (error) {
-        console.error('Error in usePatientProfile:', error)
-        const message = error instanceof Error ? error.message : 'Session expired. Please sign in.'
+        const message =
+          error instanceof Error
+            ? error.message
+            : 'Session expired. Please sign in.'
         setError(message)
         toast.error(message)
         navigate('/login')
@@ -109,7 +109,9 @@ export const usePatientProfile = () => {
 
   const logOut = async () => {
     try {
-      const { data } = await API.post('/api/auth/logout')
+      const { data } = await API.post(
+        `/api/auth/${user?.role_title ? 'provider' : 'patient'}/logout`
+      )
 
       if (!data?.success) throw new Error('Logout failed')
 

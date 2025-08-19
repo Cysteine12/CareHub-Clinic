@@ -1,9 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Mode } from '../components/ui/mode'
-
 import { Link } from 'react-router-dom'
 import { PatientSidebar } from '../components/patient-sidebar'
-
 import { SidebarTrigger } from '../components/ui/sidebar'
 import { Button } from '../components/ui/button'
 import { LogOut } from 'lucide-react'
@@ -22,7 +20,10 @@ export const PageLayout: React.FC<PageLayoutProps> = ({ children }) => {
     // So they should be redirected/logged out from patient pages
     if (!loading && user) {
       if (user.role_title) {
-        console.log('Provider detected on patient page, logging out:', user.role_title)
+        console.log(
+          'Provider detected on patient page, logging out:',
+          user.role_title
+        )
         logOut()
       }
     }
@@ -58,8 +59,8 @@ export const PageLayout: React.FC<PageLayoutProps> = ({ children }) => {
         <div className="text-center">
           <div className="text-red-500 mb-4 text-2xl">⚠️</div>
           <p className="text-muted-foreground mb-4">{error}</p>
-          <button 
-            onClick={() => window.location.href = '/login'}
+          <button
+            onClick={() => (window.location.href = '/login')}
             className="px-4 py-2 bg-primary text-primary-foreground rounded-md"
           >
             Go to Sign In
