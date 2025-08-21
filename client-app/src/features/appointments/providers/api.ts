@@ -69,7 +69,7 @@ const updateAppointment = async (
   id: string,
   payload: UpdateProviderAppointmentSchema
 ) => {
-  const { data } = await API.put(`/api/provider/appointments/${id}`, payload)
+  const { data } = await API.patch(`/api/provider/appointments/${id}`, payload)
   return data
 }
 
@@ -77,7 +77,7 @@ const updateAppointmentStatus = async (
   id: string,
   payload: UpdateAppointmentStatusSchema
 ) => {
-  const { data } = await API.put(
+  const { data } = await API.patch(
     `/api/provider/appointments/${id}/status`,
     payload
   )
@@ -88,7 +88,7 @@ const followUpAppointment = async (
   id: string,
   payload: FollowUpAppointmentSchema
 ) => {
-  const { data } = await API.put(
+  const { data } = await API.patch(
     `/api/provider/appointments/${id}/followup`,
     payload
   )
@@ -99,7 +99,7 @@ const assignAppointmentProvider = async (
   id: string,
   payload: AssignProviderSchema
 ) => {
-  const { data } = await API.put(
+  const { data } = await API.patch(
     `/api/provider/appointments/${id}/assign`,
     payload
   )

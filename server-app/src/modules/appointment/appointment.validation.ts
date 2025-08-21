@@ -64,7 +64,6 @@ export type FollowUpAppointmentSchema = z.infer<
 >
 
 const assignProviderSchema = z.object({
-  appointment_id: z.uuid('Appointment id is invalid'),
   provider_id: z.uuid('Provider id is invalid'),
 })
 

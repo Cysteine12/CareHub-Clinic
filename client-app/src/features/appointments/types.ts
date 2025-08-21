@@ -1,5 +1,6 @@
 import type {
   AppointmentStatus,
+  AssignProviderSchema,
   CreatePatientAppointmentSchema,
 } from './schema'
 
@@ -30,9 +31,18 @@ export interface IPagination {
   total?: number
 }
 
+export type AppointmentStatus =
+  (typeof AppointmentStatus)[keyof typeof AppointmentStatus]
+
 export type Appointment = CreatePatientAppointmentSchema & {
   id: string
-  status: (typeof AppointmentStatus)[keyof typeof AppointmentStatus]
+  status: AppointmentStatus
+  created_at: string
+  updated_at: string
+}
+
+export type AppointmentProvider = AssignProviderSchema & {
+  id: string
   created_at: string
   updated_at: string
 }

@@ -322,7 +322,8 @@ const followUpAppointment = catchAsync(async (req, res) => {
 
 const assignAppointmentProvider = catchAsync(async (req, res) => {
   const user = req.user!
-  const { appointment_id, provider_id }: AssignProviderSchema = req.body
+  const { id: appointment_id } = req.params
+  const { provider_id }: AssignProviderSchema = req.body
 
   const isAlreadyAssigned =
     await appointmentProviderService.findAppointmentProvider({

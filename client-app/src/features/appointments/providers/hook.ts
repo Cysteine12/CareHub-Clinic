@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
+  assignAppointmentProvider,
   createAppointment,
   getAppointment,
   getAppointments,
@@ -8,9 +9,12 @@ import {
   getAppointmentsBySchedule,
   searchAppointmentsByPatientName,
   updateAppointment,
+  updateAppointmentStatus,
 } from './api'
 import type {
+  AssignProviderSchema,
   CreateProviderAppointmentSchema,
+  UpdateAppointmentStatusSchema,
   UpdateProviderAppointmentSchema,
 } from '../schema'
 import { useNavigate } from 'react-router'
@@ -57,7 +61,7 @@ const useSearchAppointmentsByPatientName = () => {
 const useAppointment = (id: string | undefined) => {
   return useQuery({
     queryFn: () => getAppointment(id!),
-    queryKey: ['appointment', id],
+    queryKey: ['appointments', id],
     enabled: !!id,
   })
 }
@@ -70,7 +74,7 @@ const useCreateAppointment = () => {
     mutationFn: (payload: CreateProviderAppointmentSchema) =>
       createAppointment(payload),
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['Appointment'] })
+      queryClient.invalidateQueries({ queryKey: ['appointments'] })
       toast.success(data.message)
       navigate(`/provider/Appointments/${data.data.id}`)
     },
@@ -92,7 +96,9 @@ const useUpdateAppointment = () => {
     mutationFn: ({ id, payload }: UpdateAppointmentMutation) =>
       updateAppointment(id, payload),
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['appointment', data.data.id] })
+      queryClient.invalidateQueries({
+        queryKey: ['appointments', data.data.id],
+      })
       toast.success(data.message)
       navigate(`/provider/appointments/${data.data.id}`)
     },
@@ -101,6 +107,50 @@ const useUpdateAppointment = () => {
     },
   })
 }
+
+const useUpdateAppointmentStatus = () => {
+  const queryClient = useQueryClient()
+  type UpdateAppointmentStatusMutation = {
+    id: string
+    payload: UpdateAppointmentStatusSchema
+  }
+
+  return useMutation({
+    mutationFn: ({ id, payload }: UpdateAppointmentStatusMutation) =>
+      updateAppointmentStatus(id, payload),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({
+        queryKey: ['appointments', data.data.id],
+      })
+      toast.success(data.message)
+      return data
+    },
+    onError: (data: AxiosError<APIResponse>) => {
+      toast.error(data.response?.data?.message)
+    },
+  })
+}
+
+const useAssignAppointmentProvider = () => {
+  const queryClient = useQueryClient()
+  type AssignAppointmentProviderMutation = {
+    id: string
+    payload: AssignProviderSchema
+  }
+
+  return useMutation({
+    mutationFn: ({ id, payload }: AssignAppointmentProviderMutation) =>
+      assignAppointmentProvider(id, payload),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['appointments', ''] })
+      toast.success(data.message)
+    },
+    onError: (data: AxiosError<APIResponse>) => {
+      toast.error(data.response?.data?.message)
+    },
+  })
+}
+
 export {
   useAppointments,
   useAppointmentsBySchedule,
@@ -110,4 +160,6 @@ export {
   useAppointment,
   useCreateAppointment,
   useUpdateAppointment,
+  useUpdateAppointmentStatus,
+  useAssignAppointmentProvider,
 }

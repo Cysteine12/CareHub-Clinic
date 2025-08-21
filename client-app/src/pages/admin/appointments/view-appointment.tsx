@@ -1,4 +1,3 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
   Card,
@@ -8,17 +7,6 @@ import {
   CardTitle,
 } from '../../../components/ui/card'
 import { Button } from '../../../components/ui/button'
-import { Input } from '../../../components/ui/input'
-import { Label } from '../../../components/ui/label'
-import { Badge } from '../../../components/ui/badge'
-import { Textarea } from '../../../components/ui/textarea'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '../../../components/ui/select'
 import {
   Tabs,
   TabsContent,
@@ -33,261 +21,53 @@ import {
   Mail,
   MapPin,
   FileText,
-  Save,
-  CheckCircle,
   Printer,
-  Stethoscope,
   Activity,
   ArrowLeft,
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { toast } from 'sonner'
 import { format } from 'date-fns'
-import API from '../../../lib/api'
-import type { Provider } from '../../../features/providers/types'
-import { useProviders } from '../../../features/providers/hook'
 import SoapNoteDialog from '../../../components/soap-note-dialog'
 import VitalsFormDialog from '../../../components/vitals-form'
 import { useAuthStore } from '../../../store/auth-store'
-//import { SoapNoteDialog } from '../../components/soap-note-dialog'
-
-// Mock appointment data - in real app, this would come from API
-
-const statusOptions = [
-  'Scheduled',
-  'Submitted',
-  'Confirmed',
-  'Checked_In',
-  'Completed',
-  'Cancelled',
-  'No_Show',
-  'Rescheduled',
-  'Attending',
-].map((status) => status.toUpperCase())
+import AppointmentProviderList from '../../../features/appointments/providers/components/appointment-provider-list'
+import { useAppointment } from '../../../features/appointments/providers/hook'
+import type {
+  Appointment,
+  AppointmentProvider,
+} from '../../../features/appointments/types'
+import type { SoapNote, Vitals } from '../../../lib/type'
+import type { Patient } from '../../../features/patients/types'
+import type { Provider } from '../../../features/providers/types'
+import AppointmentStatusCard from '../../../features/appointments/providers/components/appointment-status-card'
 
 const AppointmentDetail = () => {
   const { id } = useParams()
   const navigate = useNavigate()
-  const queryClient = useQueryClient()
-  const [assignedProvider, setAssignedProvider] = useState('')
   const user = useAuthStore((state) => state.user)
-
-  // Only fetch providers for admin users to avoid 403 error
-  const { data: providersData } = useQuery({
-    queryKey: ['providers', 1],
-    queryFn: () =>
-      API.get('/api/providers?page=1&limit=200').then((res) => res.data),
-    enabled: user?.role_title === 'ADMIN',
-  })
-
-  const [soapNoteSaved, setSoapNoteSaved] = useState(false)
-
-  const fetchAppointment = async (id: string) => {
-    console.log('Fetching appointment with ID:', id)
-    const { data } = await API.get(`/api/provider/appointments/${id}`)
-
-    if (!data || !data.success) {
-      console.error('Failed to fetch appointment:', data)
-      toast.error(data.message || 'Failed to fetch appointment')
-      return
-    }
-    console.log('Appointment data fetched successfully:', data.data)
-    setStatus(data.data.status)
-    setProviderId(data.data.appointment_providers[0]?.provider_id)
-    return data.data
-  }
-
   const {
-    data: appointment,
+    data: appointmentData,
     isLoading,
     error,
     refetch,
-  } = useQuery({
-    queryKey: ['appointment', id],
-    queryFn: () => fetchAppointment(id!),
-    enabled: !!id,
-    staleTime: 0, // Always consider data stale
-    refetchOnMount: true, // Always refetch when component mounts
-    refetchOnWindowFocus: false, // Don't refetch on window focus
-  })
-
-  const [status, setStatus] = useState(appointment?.status || '')
-  const [providerId, setProviderId] = useState()
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'confirmed':
-        return 'default'
-      case 'attending':
-        return 'secondary'
-      case 'scheduled':
-        return 'secondary'
-      case 'checked in':
-        return 'default'
-      case 'in progress':
-        return 'default'
-      case 'completed':
-        return 'default'
-      case 'cancelled':
-        return 'destructive'
-      case 'no show':
-        return 'destructive'
-      case 'rescheduled':
-        return 'secondary'
-      default:
-        return 'outline'
-    }
-  }
-
-  const fetchProvider = async (providerId: string) => {
-    const { data } = await API.get(`/api/providers/${providerId}`)
-
-    if (!data?.success) {
-      throw new Error('Failed to fetch provider')
-    }
-
-    return data.data
-  }
-
-  const { data: provider } = useQuery({
-    queryKey: ['provider', providerId],
-    queryFn: () => fetchProvider(providerId!),
-    enabled: !!providerId, // prevents firing if ID is undefined
-  })
-
-  const handleStatusChange = async (newStatus: string) => {
-    try {
-      // Optionally, update in d
-      const { data } = await API.patch(
-        `/api/provider/appointments/${appointment.id}`,
-        {
-          status: newStatus,
-        }
-      )
-
-      if (!data || !data.success) {
-        toast.error(data.message)
-        return
-      }
-
-      setStatus(newStatus)
-      toast.success('Appointment status updated')
-    } catch (error) {
-      console.error(error)
-      toast.error('Failed to update status')
-    }
-  }
-
-  useEffect(() => {
-    if (status && status !== '') {
-      handleStatusChange(status)
-    }
-  }, [status])
-
-  // Refetch appointment data when component mounts or ID changes
-  useEffect(() => {
-    if (id) {
-      console.log(
-        'Component mounted/ID changed, invalidating and refetching appointment:',
-        id
-      )
-      // Invalidate the query to force a fresh fetch
-      queryClient.invalidateQueries({ queryKey: ['appointment', id] })
-      refetch()
-    }
-  }, [id])
-
-  // Debug appointment data changes
-  useEffect(() => {
-    console.log('Appointment data changed:', { appointment, isLoading, error })
-  }, [appointment, isLoading, error])
-
-  // Handle when user navigates back to this page
-  useEffect(() => {
-    const handleFocus = () => {
-      console.log('Page focused, invalidating appointment query')
-      queryClient.invalidateQueries({ queryKey: ['appointment', id] })
-    }
-
-    window.addEventListener('focus', handleFocus)
-    return () => window.removeEventListener('focus', handleFocus)
-  }, [id, queryClient])
-
-  const handleCheckIn = async (appointmentId: string) => {
-    try {
-      const { data } = await API.patch(`/api/appointment/${appointmentId}`, {
-        status: 'CHECKED_IN',
+  } = useAppointment(id)
+  const [appointment, setAppointment] = useState<
+    | (Appointment & {
+        vital: Vitals
+        soap_note: SoapNote
+        appointment_providers: (AppointmentProvider & { provider: Provider })[]
+        patient: Patient
       })
+    | null
+  >(null)
 
-      if (!data || !data.success) {
-        toast.error(data?.message || 'Failed to check in appointment.')
-        return
-      }
+  const [soapNoteSaved, setSoapNoteSaved] = useState(false)
 
-      toast.success('Patient successfully checked in.')
-      setStatus('CHECKED_IN')
-    } catch (error) {
-      console.error('Check-in error:', error)
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : 'An error occurred during check-in.'
-      )
-      return null
+  useEffect(() => {
+    if (appointmentData?.data) {
+      setAppointment(appointmentData.data)
     }
-  }
-
-  const handleRecordVitals = async () => {
-    const getValue = (id: string) => {
-      return (document.getElementById(id) as HTMLInputElement).value || ''
-    }
-
-    const formData = {
-      blood_pressure: getValue('blood_pressure'),
-      heart_rate: getValue('heart_rate'),
-      temperature: getValue('temperature'),
-      height: getValue('height'),
-      weight: getValue('weight'),
-      respiratory_rate: getValue('respiratory_rate'),
-      oxygen_saturation: getValue('oxygen_saturation'),
-      bmi: getValue('bmi'),
-      others: getValue('others'),
-      appointment_id: appointment?.id,
-    }
-
-    const { data } = await API.post('/api/vitals', formData)
-    if (!data?.success) {
-      toast.error('Vitals not recorded: ' + data?.message)
-    }
-    toast.success(data.message)
-  }
-
-  const handleAssignProvider = async () => {
-    if (!assignedProvider) {
-      toast.error('Please select a provider')
-      return
-    }
-
-    const formData = {
-      appointment_id: appointment?.id,
-      provider_id: assignedProvider,
-    }
-
-    const { data } = await API.patch(
-      '/api/provider/appointments/assign-provider',
-      formData
-    )
-    if (!data?.success) {
-      toast.error('Provider not assigned: ' + data?.message)
-    }
-    toast.success(data.message)
-  }
-
-  const handleViewSoapNotes = () => {
-    navigate(`/provider/vitals/${appointment?.id}`, {
-      state: { appointment },
-    })
-  }
+  }, [appointmentData])
 
   if (isLoading) {
     return (
@@ -320,7 +100,7 @@ const AppointmentDetail = () => {
     )
   }
 
-  if (!appointment) {
+  if (!appointment && !isLoading) {
     return (
       <div className="flex-1 space-y-6 p-6">
         <div className="flex items-center justify-center min-h-[400px]">
@@ -340,7 +120,6 @@ const AppointmentDetail = () => {
         <div className="flex items-center space-x-4">
           <Button variant="ghost" size="default" onClick={() => navigate(-1)}>
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back
           </Button>
           <div>
             <h1 className="text-3xl font-bold tracking-tight">
@@ -348,6 +127,7 @@ const AppointmentDetail = () => {
             </h1>
             <p className="text-muted-foreground">
               {appointment?.patient?.first_name} •{' '}
+              {appointment?.patient?.last_name} •{' '}
               {appointment?.schedule?.date
                 ? format(new Date(appointment.schedule.date), 'EEE dd')
                 : 'N/A'}{' '}
@@ -364,69 +144,12 @@ const AppointmentDetail = () => {
       </div>
 
       {/* Status and Quick Actions */}
-      <div className="p-4 bg-muted/50 rounded-lg">
-        <div className="flex items-center justify-between py-2">
-          <div className="flex items-center space-x-4">
-            <Badge variant={getStatusColor(status)} className="text-sm">
-              {status}
-            </Badge>
-            {appointment?.checkedIn && (
-              <div className="flex items-center text-sm text-green-600">
-                <CheckCircle className="h-4 w-4 mr-1" />
-                Checked in at {appointment?.checkedInTime}
-              </div>
-            )}
-          </div>
-          <div className="flex items-center space-x-2">
-            {!appointment?.checkedIn && appointment?.status !== 'Completed' && (
-              <Button onClick={() => handleCheckIn(appointment?.id)}>
-                <CheckCircle className="h-4 w-4 mr-2" />
-                Check In Patient
-              </Button>
-            )}
-            <Select value={status} onValueChange={handleStatusChange}>
-              <SelectTrigger className="w-[150px]">
-                <SelectValue placeholder="Select Status" />
-              </SelectTrigger>
-              <SelectContent>
-                {statusOptions.map((status) => (
-                  <SelectItem key={status} value={status}>
-                    {status}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-        <form
-          onSubmit={handleAssignProvider}
-          className="flex items-center justify-between space-y-4 py-2"
-        >
-          <div className="block">
-            <Label htmlFor="assignProvider">Assign Provider</Label>
-            <Select
-              value={assignedProvider}
-              onValueChange={(e) => setAssignedProvider(e)}
-            >
-              <SelectTrigger className="w-[250px]">
-                <SelectValue placeholder="Select Provider" />
-              </SelectTrigger>
-              <SelectContent>
-                {providersData?.data?.map((provider: Provider) => (
-                  <SelectItem key={provider?.id} value={provider?.id}>
-                    {provider?.first_name} {provider?.last_name} -{' '}
-                    {provider?.role_title}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="flex items-center space-x-2">
-            <Button type="submit">Assign Provider</Button>
-          </div>
-        </form>
-      </div>
+      {appointment && (
+        <AppointmentStatusCard
+          appointmentId={appointment.id}
+          appointmentStatus={appointment.status}
+        />
+      )}
 
       <Tabs defaultValue="details" className="space-y-4">
         <TabsList>
@@ -436,107 +159,54 @@ const AppointmentDetail = () => {
         </TabsList>
 
         <TabsContent value="details" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Calendar className="h-5 w-5 mr-2" />
-                  Appointment Information
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">Date:</span>
-                  <span>
-                    {new Date(appointment?.schedule.date).toLocaleDateString()}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">Time:</span>
-                  <span>{appointment?.schedule.time}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">Type:</span>
-                  <span>
-                    {appointment?.purposes?.map((status: string) =>
-                      status
-                        .toLowerCase()
-                        .split('_')
-                        .map(
-                          (word) => word.charAt(0).toUpperCase() + word.slice(1)
-                        )
-                        .join(' ')
-                    )}
-                  </span>
-                </div>
-                <Separator />
-                <div className="space-y-2">
-                  <span className="text-sm font-medium">Reason for Visit:</span>
-                  <p className="text-sm text-muted-foreground">
-                    {appointment?.reason}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Stethoscope className="h-5 w-5 mr-2" />
-                  Provider Information
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">Provider:</span>
-                  <span>{provider?.first_name}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">Role:</span>
-                  <span className="lowercase">{provider?.role_title}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">Phone:</span>
-                  <span>{provider?.phone}</span>
-                </div>
-                <Separator />
-                <div className="space-y-2">
-                  <span className="text-sm font-medium">Clinical Notes:</span>
-
-                  {appointment?.soap_note ? (
-                    <div className="text-sm text-muted-foreground space-y-2">
-                      {typeof appointment.soap_note === 'string' ? (
-                        <p>{appointment.soap_note}</p>
-                      ) : (
-                        <div className="space-y-2">
-                          <div>
-                            <strong>Subjective:</strong>{' '}
-                            {appointment.soap_note.subjective || 'N/A'}
-                          </div>
-                          <div>
-                            <strong>Objective:</strong>{' '}
-                            {appointment.soap_note.objective || 'N/A'}
-                          </div>
-                          <div>
-                            <strong>Assessment:</strong>{' '}
-                            {appointment.soap_note.assessment || 'N/A'}
-                          </div>
-                          <div>
-                            <strong>Plan:</strong>{' '}
-                            {appointment.soap_note.plan || 'N/A'}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <p className="text-sm text-muted-foreground">
-                      No clinical notes available
-                    </p>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Calendar className="h-5 w-5 mr-2" />
+                Appointment Information
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">Date:</span>
+                <span>
+                  {new Date(appointment?.schedule.date).toLocaleDateString()}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">Time:</span>
+                <span>{appointment?.schedule.time}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">Type:</span>
+                <span>
+                  {appointment?.purposes?.map((status: string) =>
+                    status
+                      .toLowerCase()
+                      .split('_')
+                      .map(
+                        (word) => word.charAt(0).toUpperCase() + word.slice(1)
+                      )
+                      .join(' ')
                   )}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+                </span>
+              </div>
+              <Separator />
+              <div className="space-y-2">
+                <span className="text-sm font-medium">Reason for Visit:</span>
+                <p className="text-sm text-muted-foreground">
+                  {appointment?.other_purpose
+                    ? appointment.other_purpose
+                    : 'No comment provided'}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          <AppointmentProviderList
+            appointmentId={id}
+            appointmentProviders={appointment?.appointment_providers}
+          />
         </TabsContent>
 
         <TabsContent value="patient" className="space-y-4">
@@ -714,9 +384,9 @@ const AppointmentDetail = () => {
                   Vital Signs
                 </CardTitle>
                 <CardDescription>
-                  {appointment?.vitals?.created_at
+                  {appointment?.vital?.created_at
                     ? `Recorded at ${new Date(
-                        appointment.vitals.created_at
+                        appointment.vital.created_at
                       ).toLocaleDateString()}`
                     : 'No vitals recorded yet'}
                 </CardDescription>
@@ -728,7 +398,7 @@ const AppointmentDetail = () => {
                     setAppointmentId={() => {}}
                     userId={user.id}
                     setHasVitals={() => {}}
-                    setAppointmentStatus={setStatus}
+                    setAppointmentStatus={() => {}}
                     showAsDialog={true}
                   />
                 ) : (
@@ -754,7 +424,7 @@ const AppointmentDetail = () => {
                 {!soapNoteSaved ? (
                   <SoapNoteDialog
                     appointmentId={appointment?.id}
-                    vitals={appointment?.vitals || {}}
+                    vitals={appointment?.vital || {}}
                     purposes={appointment?.purposes || []}
                     setAppointmentId={() => {}}
                     appointment={appointment}
@@ -777,7 +447,7 @@ const AppointmentDetail = () => {
                         <FileText className="h-4 w-4 mr-2" />
                         Add Another SOAP Note
                       </Button>
-                      <Button onClick={handleViewSoapNotes} className="flex-1">
+                      <Button className="flex-1">
                         <Activity className="h-4 w-4 mr-2" />
                         View SOAP Notes
                       </Button>
