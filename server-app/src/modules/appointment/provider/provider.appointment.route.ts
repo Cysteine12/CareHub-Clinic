@@ -15,6 +15,18 @@ router.get(
 )
 
 router.get(
+  '/schedule/:scheduleType',
+  authenticate(UserType.PROVIDER),
+  providerAppointmentController.getAppointmentsBySchedule
+)
+
+router.get(
+  '/search',
+  authenticate(UserType.PROVIDER),
+  providerAppointmentController.searchAppointmentsByPatientName
+)
+
+router.get(
   '/patient/:patient_id',
   authenticate(UserType.PROVIDER),
   providerAppointmentController.getAppointmentsByPatient
@@ -23,6 +35,7 @@ router.get(
 router.get(
   '/provider/:provider_id',
   authenticate(UserType.PROVIDER),
+  authorize([ProviderRoleTitle.ADMIN, ProviderRoleTitle.RECEPTIONIST]),
   providerAppointmentController.getAppointmentsByProvider
 )
 
@@ -35,6 +48,7 @@ router.get(
 router.post(
   '/',
   authenticate(UserType.PROVIDER),
+  authorize([ProviderRoleTitle.ADMIN, ProviderRoleTitle.RECEPTIONIST]),
   validate(appointmentValidation.createProviderAppointmentSchema),
   providerAppointmentController.createAppointment
 )
@@ -42,6 +56,7 @@ router.post(
 router.patch(
   '/:id',
   authenticate(UserType.PROVIDER),
+  authorize([ProviderRoleTitle.ADMIN, ProviderRoleTitle.RECEPTIONIST]),
   validate(appointmentValidation.updateProviderAppointmentSchema),
   providerAppointmentController.updateAppointment
 )
@@ -56,6 +71,7 @@ router.patch(
 router.patch(
   '/:id/followup',
   authenticate(UserType.PROVIDER),
+  authorize([ProviderRoleTitle.ADMIN, ProviderRoleTitle.RECEPTIONIST]),
   validate(appointmentValidation.followUpAppointmentSchema),
   providerAppointmentController.followUpAppointment
 )
@@ -71,6 +87,7 @@ router.patch(
 router.delete(
   '/:id',
   authenticate(UserType.PROVIDER),
+  authorize([ProviderRoleTitle.ADMIN, ProviderRoleTitle.RECEPTIONIST]),
   providerAppointmentController.deleteAppointment
 )
 

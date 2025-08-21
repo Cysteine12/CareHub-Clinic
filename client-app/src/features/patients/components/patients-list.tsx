@@ -18,7 +18,7 @@ import { Avatar, AvatarFallback } from '../../../components/ui/avatar'
 import { differenceInYears } from 'date-fns'
 import type { InsuranceProvider } from '../../insuranceProviders/types'
 import type { Appointment } from '../../../lib/type'
-import { formatDate } from '../../../lib/utils'
+import { formatDate, formatTextWithSize } from '../../../lib/utils'
 
 interface Props {
   searchValue: string
@@ -137,7 +137,7 @@ const PatientsList = ({ searchValue, pagination, setPagination }: Props) => {
                       </div>
                       <div className="flex items-center text-sm text-muted-foreground">
                         <Mail className="mr-1 h-3 w-3" />
-                        {patient?.email?.toLowerCase()}
+                        {formatTextWithSize(patient?.email?.toLowerCase(), 25)}
                       </div>
                     </div>
                   </TableCell>

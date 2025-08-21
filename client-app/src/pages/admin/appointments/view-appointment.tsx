@@ -6,26 +6,26 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from '../../components/ui/card'
-import { Button } from '../../components/ui/button'
-import { Input } from '../../components/ui/input'
-import { Label } from '../../components/ui/label'
-import { Badge } from '../../components/ui/badge'
-import { Textarea } from '../../components/ui/textarea'
+} from '../../../components/ui/card'
+import { Button } from '../../../components/ui/button'
+import { Input } from '../../../components/ui/input'
+import { Label } from '../../../components/ui/label'
+import { Badge } from '../../../components/ui/badge'
+import { Textarea } from '../../../components/ui/textarea'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../../components/ui/select'
+} from '../../../components/ui/select'
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
-} from '../../components/ui/tabs'
-import { Separator } from '../../components/ui/separator'
+} from '../../../components/ui/tabs'
+import { Separator } from '../../../components/ui/separator'
 import {
   Calendar,
   User,
@@ -43,12 +43,12 @@ import {
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { format } from 'date-fns'
-import API from '../../lib/api'
-import type { Provider } from '../../features/providers/types'
-import { useProviders } from '../../features/providers/hook'
-import SoapNoteDialog from '../../components/soap-note-dialog'
-import VitalsFormDialog from '../../components/vitals-form'
-import { useAuthStore } from '../../store/auth-store'
+import API from '../../../lib/api'
+import type { Provider } from '../../../features/providers/types'
+import { useProviders } from '../../../features/providers/hook'
+import SoapNoteDialog from '../../../components/soap-note-dialog'
+import VitalsFormDialog from '../../../components/vitals-form'
+import { useAuthStore } from '../../../store/auth-store'
 //import { SoapNoteDialog } from '../../components/soap-note-dialog'
 
 // Mock appointment data - in real app, this would come from API
@@ -84,7 +84,7 @@ const AppointmentDetail = () => {
 
   const fetchAppointment = async (id: string) => {
     console.log('Fetching appointment with ID:', id)
-    const { data } = await API.get(`/api/appointment/${id}`)
+    const { data } = await API.get(`/api/provider/appointments/${id}`)
 
     if (!data || !data.success) {
       console.error('Failed to fetch appointment:', data)
@@ -158,9 +158,12 @@ const AppointmentDetail = () => {
   const handleStatusChange = async (newStatus: string) => {
     try {
       // Optionally, update in d
-      const { data } = await API.patch(`/api/appointment/${appointment.id}`, {
-        status: newStatus,
-      })
+      const { data } = await API.patch(
+        `/api/provider/appointments/${appointment.id}`,
+        {
+          status: newStatus,
+        }
+      )
 
       if (!data || !data.success) {
         toast.error(data.message)
@@ -192,7 +195,7 @@ const AppointmentDetail = () => {
       queryClient.invalidateQueries({ queryKey: ['appointment', id] })
       refetch()
     }
-  }, [id, refetch, queryClient])
+  }, [id])
 
   // Debug appointment data changes
   useEffect(() => {
@@ -252,7 +255,7 @@ const AppointmentDetail = () => {
       appointment_id: appointment?.id,
     }
 
-    const { data } = await API.post('/api/vitals/record', formData)
+    const { data } = await API.post('/api/vitals', formData)
     if (!data?.success) {
       toast.error('Vitals not recorded: ' + data?.message)
     }
@@ -271,7 +274,7 @@ const AppointmentDetail = () => {
     }
 
     const { data } = await API.patch(
-      '/api/provider/appointment/assign-provider',
+      '/api/provider/appointments/assign-provider',
       formData
     )
     if (!data?.success) {

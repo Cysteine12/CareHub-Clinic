@@ -5,6 +5,14 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+export const formatTextWithSize = (
+  text: string | undefined | null,
+  length: number
+) => {
+  if (!text) return ''
+  return text.length > length ? text.slice(0, length) + '...' : text
+}
+
 const formatDateIntl = (datetime: string) => {
   if (!datetime) return
 

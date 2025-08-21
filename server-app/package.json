@@ -1,5 +1,5 @@
 {
-  "name": "cyc-comm-clinic-server",
+  "name": "carehub-clinic",
   "version": "0.0.1",
   "description": "Server for the Community Clinic App, part of the 2025 Cohort 2 of Commit Your Code",
   "main": "src/index.ts",

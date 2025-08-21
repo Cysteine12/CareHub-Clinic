@@ -41,7 +41,7 @@ services:
       - /app/node_modules
       - ./.env:/app/.env
     ports: 
-      - 5173:5173
+      - 3000:3000
     command: npm run dev
 
 volumes:

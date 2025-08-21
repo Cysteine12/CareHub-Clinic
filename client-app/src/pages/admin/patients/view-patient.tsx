@@ -31,7 +31,7 @@ const ViewPatient = () => {
   const { id } = useParams()
   const navigate = useNavigate()
   const { data: patientData, isLoading } = usePatient(id)
-  const { appointments } = useAppointmentsByPatient(id)
+  const { appointments } = useAppointmentsByPatient(id, { page: 1, limit: 3 })
 
   const patient: Patient = patientData?.data
 
@@ -91,15 +91,15 @@ const ViewPatient = () => {
       <div className="flex justify-between items-center mb-8">
         <h2 className="text-2xl font-bold">Patient Information</h2>
         <Button
-          onClick={() => navigate(`/provider/patients/${patient.id}/edit`)}
+          onClick={() => navigate(`/provider/patients/${patient?.id}/edit`)}
         >
           <Settings className="h-4 w-4 mr-2" />
           Edit Profile
         </Button>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-12">
-        <div className="lg:col-span-8">
+      <div className="grid gap-4 xl:grid-cols-12">
+        <div className="xl:col-span-8">
           <Card className="my-2">
             <div className="md:grid md:grid-cols-2">
               <ProfilePhoto
@@ -108,7 +108,7 @@ const ViewPatient = () => {
               />
               <div>
                 <CardHeader>
-                  <CardTitle>Personal Information</CardTitle>
+                  <CardTitle>Patient Information</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex items-center space-x-3">
@@ -201,7 +201,7 @@ const ViewPatient = () => {
           </Card>
         </div>
 
-        <div className="lg:col-span-4">
+        <div className="xl:col-span-4">
           {/* Quick Actions */}
           <Card className="my-2">
             <CardHeader>
@@ -210,7 +210,7 @@ const ViewPatient = () => {
             </CardHeader>
             <CardContent className="space-y-3">
               <Button asChild className="w-full justify-start">
-                <Link to="/intake">
+                <Link to="/provider/appointments">
                   <ListChecks className="mr-2 h-4 w-4" />
                   View Appointments
                 </Link>
@@ -220,7 +220,7 @@ const ViewPatient = () => {
                 variant="outline"
                 className="w-full justify-start bg-transparent"
               >
-                <Link to="/appointments">
+                <Link to={`/provider/appointments/new/${patient?.id}`}>
                   <Calendar className="mr-2 h-4 w-4" />
                   New Appointment
                 </Link>
@@ -230,7 +230,9 @@ const ViewPatient = () => {
                 variant="outline"
                 className="w-full justify-start bg-transparent"
               >
-                <Link to={`/provider/insurance-check?patient_id=${patient.id}`}>
+                <Link
+                  to={`/provider/insurance-check?patient_id=${patient?.id}`}
+                >
                   <CheckCircle className="mr-2 h-4 w-4" />
                   Check Insurance
                 </Link>
@@ -242,9 +244,7 @@ const ViewPatient = () => {
           <Card className="my-2">
             <CardHeader>
               <CardTitle>Upcoming Schedules</CardTitle>
-              <CardDescription>
-                Upcoming appointments and visits
-              </CardDescription>
+              <CardDescription>Recent appointments and visits</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -254,9 +254,13 @@ const ViewPatient = () => {
                   </div>
                 )}
                 {appointments?.map((appointment, index) => (
-                  <div
+                  <Button
+                    variant={'ghost'}
+                    onClick={() =>
+                      navigate(`/provider/appointments/${appointment?.id}`)
+                    }
                     key={index}
-                    className="flex items-center justify-between p-3 border rounded-lg"
+                    className="flex items-center justify-between border rounded-lg text-wrap h-auto"
                   >
                     <div className="flex items-center space-x-3">
                       <div className="text-sm font-medium">
@@ -271,22 +275,22 @@ const ViewPatient = () => {
                               ? appointment?.other_purpose
                               : formatPurposeText(appointment?.purposes)
                           }`.slice(0, 12)}
-                          ...
+                          ..
                         </div>
                       </div>
                     </div>
                     <Badge
                       variant={
                         appointment?.status === 'SCHEDULED'
-                          ? 'secondary'
+                          ? 'default'
                           : appointment?.status === 'CANCELLED'
                           ? 'destructive'
-                          : 'default'
+                          : 'secondary'
                       }
                     >
                       {appointment?.status}
                     </Badge>
-                  </div>
+                  </Button>
                 ))}
               </div>
             </CardContent>

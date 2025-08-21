@@ -2,11 +2,11 @@ import { AppointmentStatus } from '@prisma/client'
 import prisma from '../../config/prisma.js'
 import { UserType } from '../../types/index.js'
 import catchAsync from '../../utils/catchAsync.js'
-import { endOfDay, startOfDay, subMonths } from 'date-fns'
+import { endOfToday, startOfToday, subMonths } from 'date-fns'
 
 const dashboard = catchAsync(async (req, res) => {
   const { id, type: userType } = req.user!
-  const today = new Date()
+  const now = new Date()
 
   let data: any
   if (userType === UserType.PATIENT) {
@@ -15,7 +15,7 @@ const dashboard = catchAsync(async (req, res) => {
         prisma.appointment.findFirst({
           where: {
             patient_id: id,
-            schedule: { path: ['date'], gte: today },
+            schedule: { path: ['date'], gte: now },
           },
           orderBy: { created_at: 'asc' },
         }),
@@ -30,7 +30,7 @@ const dashboard = catchAsync(async (req, res) => {
         prisma.appointment.findMany({
           where: {
             patient_id: id,
-            schedule: { path: ['date'], gte: today },
+            schedule: { path: ['date'], gte: now },
           },
           orderBy: { created_at: 'asc' },
         }),
@@ -46,18 +46,13 @@ const dashboard = catchAsync(async (req, res) => {
     ] = await prisma.$transaction([
       prisma.appointment.findMany({
         where: {
-          AND: [
-            {
-              schedule: { path: ['date'], gte: startOfDay(today) },
-            },
-            { schedule: { path: ['date'], lte: endOfDay(today) } },
-          ],
+          schedule: { path: ['date'], gte: startOfToday(), lte: endOfToday() },
         },
         include: { patient: { select: { first_name: true, last_name: true } } },
       }),
       prisma.patient.count({
         where: {
-          appointments: { some: { updated_at: { gte: subMonths(today, 1) } } },
+          appointments: { some: { updated_at: { gte: subMonths(now, 1) } } },
         },
       }),
       prisma.appointment.count({
@@ -68,8 +63,9 @@ const dashboard = catchAsync(async (req, res) => {
       }),
     ])
 
-    const noShowRate =
-      (totalNoShowAppointments / totalCheckedInAppointments) * 100
+    const noShowRate = totalCheckedInAppointments
+      ? (totalNoShowAppointments / totalCheckedInAppointments) * 100
+      : 0
 
     data = {
       todayAppointments,

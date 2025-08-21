@@ -78,7 +78,8 @@ export type SoapNote = {
   plan: object | null
 }
 
-export const formatPurposeText = (purposes: string[]): string => {
+export const formatPurposeText = (purposes: string[] | undefined): string => {
+  if (!purposes) return ''
   return purposes
     .map((purpose) =>
       purpose
@@ -90,7 +91,8 @@ export const formatPurposeText = (purposes: string[]): string => {
     .join(', ')
 }
 
-export function formatTimeToAmPm(time24: string): string {
+export function formatTimeToAmPm(time24: string | undefined): string {
+  if (!time24) return ''
   const [hourStr, minute] = time24.split(':')
   let hour = parseInt(hourStr, 10)
   const ampm = hour >= 12 ? 'PM' : 'AM'

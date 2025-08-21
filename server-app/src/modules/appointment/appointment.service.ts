@@ -1,4 +1,4 @@
-import type { Appointment, Prisma } from '@prisma/client'
+import type { Appointment, Patient, Prisma } from '@prisma/client'
 import prisma from '../../config/prisma.js'
 import type { AppointmentScheduleSchema } from './appointment.validation.js'
 import { ValidationError } from '../../middlewares/errorHandler.js'
@@ -28,6 +28,7 @@ const findAppointments = async (
     where: filter,
     skip: options?.skip || 0,
     take: options?.limit || 20,
+    include: { patient: { omit: { password: true } } },
   })
 }
 
@@ -37,16 +38,13 @@ const findAppointment = async (
   return await prisma.appointment.findUnique({
     where: filter,
     include: {
+      patient: { omit: { password: true } },
       events: true,
       vital: true,
-      appointment_providers: {
-        include: {
-          provider: {
-            select: { first_name: true, last_name: true, role_title: true },
-          },
-        },
-      },
       soap_notes: true,
+      appointment_providers: {
+        include: { provider: { omit: { password: true } } },
+      },
     },
   })
 }
@@ -62,7 +60,7 @@ const createAppointment = async (
   payload.schedule.date = addMinutes(
     new Date(payload.schedule.date),
     parseInt(hours) * 60 + parseInt(minutes)
-  ).toDateString()
+  ).toISOString()
 
   return await prisma.appointment.create({
     data: payload,
@@ -72,7 +70,7 @@ const createAppointment = async (
 const updateAppointment = async (
   filter: AppointmentWhereUniqueInput,
   payload: AppointmentUpdateInput & { schedule?: AppointmentScheduleSchema }
-): Promise<Appointment | null> => {
+): Promise<(Appointment & { patient: Omit<Patient, 'password'> }) | null> => {
   if (payload.schedule) {
     const [hours, minutes] = payload.schedule.time.split(':')
     if (!hours || !minutes) throw new ValidationError('Invalid Time')
@@ -85,6 +83,7 @@ const updateAppointment = async (
   return await prisma.appointment.update({
     where: filter,
     data: payload,
+    include: { patient: { omit: { password: true } } },
   })
 }
 

@@ -7,6 +7,7 @@ import {
   formatPurposeText,
   type Appointment,
 } from '../lib/type'
+import { formatTextWithSize } from '../lib/utils'
 
 interface AppointmentCardProps {
   appointment: Appointment
@@ -26,7 +27,7 @@ export default function AppointmentCard({ appointment }: AppointmentCardProps) {
           <div className="text-lg font-semibold">
             {formatDateParts(appointment.schedule.date).day}
           </div>
-          <div className="text-xs text-muted-foreground">
+          <div className="text-xs text-muted-foreground flex items-center">
             <Clock className="h-3 w-3 inline mr-1" />
             30 min
           </div>
@@ -48,11 +49,11 @@ export default function AppointmentCard({ appointment }: AppointmentCardProps) {
             </span>
             <Badge
               variant={
-                appointment?.status === 'SUBMITTED'
+                appointment?.status === 'COMPLETED'
                   ? 'default'
                   : appointment?.status === 'SCHEDULED'
                   ? 'secondary'
-                  : appointment?.status === 'ATTENDING'
+                  : appointment?.status === 'SUBMITTED'
                   ? 'outline'
                   : appointment?.status === 'CANCELLED'
                   ? 'destructive'
@@ -66,19 +67,8 @@ export default function AppointmentCard({ appointment }: AppointmentCardProps) {
           <div className="text-sm text-muted-foreground space-y-1">
             <div>
               {appointment?.purposes?.includes('OTHERS')
-                ? appointment.other_purpose
-                : formatPurposeText(appointment.purposes)}{' '}
-              {appointment?.appointment_providers?.length > 0 && (
-                <>
-                  with{' '}
-                  {appointment?.appointment_providers
-                    .map((ap) => {
-                      const p = ap?.provider
-                      return `${p?.first_name} ${p?.last_name}`
-                    })
-                    .join(', ')}
-                </>
-              )}
+                ? formatTextWithSize(appointment?.other_purpose, 30)
+                : formatPurposeText(appointment?.purposes)}
             </div>
             <div className="flex items-center space-x-4">
               <span className="flex items-center">
@@ -90,7 +80,9 @@ export default function AppointmentCard({ appointment }: AppointmentCardProps) {
                 {appointment?.patient?.email}
               </span>
             </div>
-            <div className="text-xs italic">{appointment?.notes}</div>
+            <div className="text-xs italic">
+              {formatTextWithSize(appointment?.notes, 50)}
+            </div>
           </div>
         </div>
       </div>

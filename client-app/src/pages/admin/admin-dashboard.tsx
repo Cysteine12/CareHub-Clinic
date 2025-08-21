@@ -30,29 +30,19 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState<{
     todayAppointments: Appointment[]
     totalActivePatientsInLastMonth: number
+    waitTimeRate: number
+    noShowRate: number
   } | null>(null)
-  const [waitTime, setWaitTime] = useState<number | null>(null)
-  const [noShowRate, setNoShowRate] = useState<number | null>(null)
 
   const fetchStats = async () => {
     const { data } = await API.get('/api/user/dashboard')
     setStats(data.data)
-  }
-  const fetchWaitTime = async () => {
-    const { data } = await API.get('/api/provider/appointment/waittime')
-    setWaitTime(data.data)
-  }
-  const fetchNoShowRate = async () => {
-    const { data } = await API.get('/api/provider/appointment/no-show-rates')
-    setNoShowRate(data.data)
   }
 
   const todayAppointments = stats?.todayAppointments?.slice(0, 4)
 
   useEffect(() => {
     fetchStats()
-    fetchWaitTime()
-    fetchNoShowRate()
   }, [])
 
   return (
@@ -105,7 +95,9 @@ export default function AdminDashboard() {
               <Clock className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{waitTime || '--'} min</div>
+              <div className="text-2xl font-bold">
+                {stats?.waitTimeRate ? stats.waitTimeRate + 'min' : 'N/A'}
+              </div>
             </CardContent>
           </Card>
 
@@ -117,7 +109,9 @@ export default function AdminDashboard() {
               <TrendingUp className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{noShowRate || '--'}%</div>
+              <div className="text-2xl font-bold">
+                {stats?.noShowRate ? stats.noShowRate + 'min' : 'N/A'}
+              </div>
             </CardContent>
           </Card>
         </div>

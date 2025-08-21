@@ -1,6 +1,7 @@
-import { AppointmentStatus, EventType } from '@prisma/client'
+import { AppointmentStatus, EventType, type Appointment } from '@prisma/client'
 import {
   NotFoundError,
+  UnauthorizedError,
   ValidationError,
 } from '../../../middlewares/errorHandler.js'
 import catchAsync from '../../../utils/catchAsync.js'
@@ -19,12 +20,97 @@ import googleAuthService from '../../auth/google/googleAuth.service.js'
 import calendarService from '../../../services/calendar.service.js'
 import type { Credentials } from 'google-auth-library'
 import config from '../../../config/config.js'
+import { endOfToday, startOfToday } from 'date-fns'
 
 const getAppointments = catchAsync(async (req, res) => {
+  const user = req.user!
   const query = req.query
   const options = { page: Number(query.page), limit: Number(query.limit) }
 
-  const appointments = await appointmentService.findAppointments({}, options)
+  let appointments = []
+  if (['ADMIN', 'RECEPTIONIST'].includes(user.roleTitle!)) {
+    appointments = await appointmentService.findAppointments({}, options)
+  } else {
+    appointments = await appointmentProviderService.findAppointmentProviders(
+      { provider_id: user.id },
+      options
+    )
+    appointments.map((appointmentProvider) => appointmentProvider.appointment)
+  }
+
+  res.status(200).json({
+    success: true,
+    data: appointments,
+  })
+})
+
+const getAppointmentsBySchedule = catchAsync(async (req, res) => {
+  const user = req.user!
+  const { scheduleType } = req.params
+  const query = req.query
+  const options = { page: Number(query.page), limit: Number(query.limit) }
+
+  let filters
+  if (scheduleType === 'today') {
+    filters = {
+      schedule: { path: ['date'], gte: startOfToday(), lte: endOfToday() },
+    }
+  } else if (scheduleType === 'upcoming') {
+    filters = { schedule: { path: ['date'], gte: startOfToday() } }
+  }
+
+  let appointments
+  if (['ADMIN', 'RECEPTIONIST'].includes(user.roleTitle!)) {
+    appointments = await appointmentService.findAppointments(filters, options)
+  } else {
+    appointments = await appointmentProviderService.findAppointmentProviders(
+      { provider_id: user.id, appointment: filters },
+      options
+    )
+    appointments.map((appointmentProvider) => appointmentProvider.appointment)
+  }
+
+  res.status(200).json({
+    success: true,
+    data: appointments,
+  })
+})
+
+const searchAppointmentsByPatientName = catchAsync(async (req, res) => {
+  const user = req.user!
+  const query = req.query
+  const options = { page: Number(query.page), limit: Number(query.limit) }
+
+  let appointments = []
+  if (['ADMIN', 'RECEPTIONIST'].includes(user.roleTitle!)) {
+    appointments = await appointmentService.findAppointments(
+      {
+        patient: {
+          OR: [
+            { first_name: { contains: query.search, mode: 'insensitive' } },
+            { last_name: { contains: query.search, mode: 'insensitive' } },
+          ],
+        },
+      },
+      options
+    )
+  } else {
+    appointments = await appointmentProviderService.findAppointmentProviders(
+      {
+        provider_id: user.id,
+        appointment: {
+          patient: {
+            OR: [
+              { first_name: { contains: query.search, mode: 'insensitive' } },
+              { last_name: { contains: query.search, mode: 'insensitive' } },
+            ],
+          },
+        },
+      },
+      options
+    )
+    appointments.map((appointmentProvider) => appointmentProvider.appointment)
+  }
 
   res.status(200).json({
     success: true,
@@ -67,9 +153,22 @@ const getAppointmentsByProvider = catchAsync(async (req, res) => {
 })
 
 const getAppointment = catchAsync(async (req, res) => {
+  const user = req.user!
   const id = req.params.id
 
-  const appointment = await appointmentService.findAppointment({ id })
+  let appointment: Appointment | undefined | null
+  if (['ADMIN', 'RECEPTIONIST'].includes(user.roleTitle!)) {
+    appointment = await appointmentService.findAppointment({ id })
+  } else {
+    const apptProvider =
+      await appointmentProviderService.findAppointmentProvider({
+        appointment_id_provider_id: {
+          provider_id: user.id,
+          appointment_id: id,
+        },
+      })
+    appointment = apptProvider?.appointment
+  }
   if (!appointment) throw new NotFoundError('Appointment not found')
 
   res.status(200).json({
@@ -82,16 +181,9 @@ const createAppointment = catchAsync(async (req, res) => {
   const provider = req.user!
   const newAppointment: CreateProviderAppointmentSchema = req.body
 
-  const savedAppointment = await appointmentService.createAppointment({
-    ...newAppointment,
-    status: AppointmentStatus.SCHEDULED,
-    events: {
-      create: {
-        type: EventType.APPOINTMENT_STATUS_CHANGED,
-        created_by_id: provider.id,
-      },
-    },
-  })
+  const savedAppointment = await appointmentService.createAppointment(
+    newAppointment
+  )
 
   res.status(201).json({
     success: true,
@@ -101,7 +193,6 @@ const createAppointment = catchAsync(async (req, res) => {
 })
 
 const updateAppointment = catchAsync(async (req, res) => {
-  const provider = req.user!
   const id = req.params.id
   const newAppointment: UpdateProviderAppointmentSchema = req.body
 
@@ -123,6 +214,15 @@ const updateAppointmentStatus = catchAsync(async (req, res) => {
   const id = req.params.id
   const { status }: UpdateAppointmentStatusSchema = req.body
 
+  if (
+    provider.roleTitle &&
+    !['ADMIN', 'RECEPTIONIST'].includes(provider.roleTitle)
+  ) {
+    if (!['ATTENDING', 'ATTENDED'].includes(status)) {
+      throw new UnauthorizedError('Not authorized to set this status')
+    }
+  }
+
   const updatedAppointment = await appointmentService.updateAppointment(
     { id },
     {
@@ -136,6 +236,38 @@ const updateAppointmentStatus = catchAsync(async (req, res) => {
     }
   )
   if (!updatedAppointment) throw new NotFoundError('Appointment not found')
+
+  if (status === AppointmentStatus.SCHEDULED) {
+    await emailService.sendAppointmentScheduledMail(
+      updatedAppointment.patient,
+      updatedAppointment.schedule as AppointmentSchedule
+    )
+
+    const token = await googleAuthService.findCalendarToken({
+      patient_id: updatedAppointment.patient_id,
+    })
+    if (token) {
+      const addMinutesToDate = (iso: string | Date) => {
+        const date = new Date(iso)
+        date.setMinutes(date.getMinutes() + 30)
+        return date.toISOString()
+      }
+      await calendarService.createCalendarEvent(token.tokens as Credentials, {
+        summary: `${config.APP_NAME} Medical Appointment Schedule`,
+        description: `Appointment is scheduled for ${updatedAppointment.purposes
+          .join(', ')
+          .replace('_', ' ')}. \nVisit ${
+          config.ORIGIN_URL
+        }/appointments for more details.`,
+        start: (
+          updatedAppointment.schedule as AppointmentSchedule
+        ).date.toString(),
+        end: addMinutesToDate(
+          (updatedAppointment.schedule as AppointmentSchedule).date.toString()
+        ),
+      })
+    }
+  }
 
   res.status(200).json({
     success: true,
@@ -189,6 +321,7 @@ const followUpAppointment = catchAsync(async (req, res) => {
 })
 
 const assignAppointmentProvider = catchAsync(async (req, res) => {
+  const user = req.user!
   const { appointment_id, provider_id }: AssignProviderSchema = req.body
 
   const isAlreadyAssigned =
@@ -197,42 +330,19 @@ const assignAppointmentProvider = catchAsync(async (req, res) => {
     })
   if (isAlreadyAssigned) throw new ValidationError('Provider already assigned')
 
-  const [appointment, alreadyScheduled] =
+  const appointment =
     await appointmentProviderService.createAppointmentProvider({
       appointment_id: appointment_id,
       provider_id: provider_id,
+      events: {
+        create: {
+          type: EventType.PROVIDER_ASSIGNED,
+          appointment_id: appointment_id,
+          created_by_id: user.id,
+        },
+      },
     })
   if (!appointment) throw new NotFoundError('Appointment not found')
-
-  await emailService.sendAppointmentScheduledMail(
-    appointment.patient,
-    appointment.schedule as AppointmentSchedule
-  )
-
-  if (!alreadyScheduled) {
-    const token = await googleAuthService.findCalendarToken({
-      patient_id: appointment.patient_id,
-    })
-    if (token) {
-      const addMinutesToDate = (iso: string | Date) => {
-        const date = new Date(iso)
-        date.setMinutes(date.getMinutes() + 30)
-        return date.toISOString()
-      }
-      await calendarService.createCalendarEvent(token.tokens as Credentials, {
-        summary: `${config.APP_NAME} Medical Appointment Schedule`,
-        description: `Appointment is scheduled for ${appointment.purposes
-          .join(', ')
-          .replace('_', ' ')}. \nVisit ${
-          config.ORIGIN_URL
-        }/appointments for more details.`,
-        start: (appointment.schedule as AppointmentSchedule).date.toString(),
-        end: addMinutesToDate(
-          (appointment.schedule as AppointmentSchedule).date.toString()
-        ),
-      })
-    }
-  }
 
   return res.status(200).json({
     success: true,
@@ -271,6 +381,8 @@ const deleteAppointment = catchAsync(async (req, res) => {
 
 export default {
   getAppointments,
+  getAppointmentsBySchedule,
+  searchAppointmentsByPatientName,
   getAppointmentsByPatient,
   getAppointmentsByProvider,
   getAppointment,

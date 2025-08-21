@@ -5,7 +5,15 @@ import type { Appointment } from '../../lib/type'
 import type { AppointmentSchedule } from './types'
 import { useNavigate } from 'react-router-dom'
 
-const useAppointmentsByPatient = (userId: string | undefined) => {
+type PaginationType = {
+  page: number
+  limit: number
+}
+
+const useAppointmentsByPatient = (
+  patientId: string | undefined,
+  query?: PaginationType
+) => {
   const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
   const [appointments, setAppointments] = useState<
@@ -16,8 +24,10 @@ const useAppointmentsByPatient = (userId: string | undefined) => {
     const fetchAppointments = async () => {
       setLoading(true)
 
-      if (!userId) return navigate('/not-found')
-      const { data } = await API.get(`/api/appointment/appointments/${userId}`)
+      if (!patientId) return navigate('/not-found')
+      const { data } = await API.get(
+        `/api/provider/appointments/patient/${patientId}?page=${query?.page}&limit=${query?.limit}`
+      )
 
       if (!data?.success) {
         toast.error(data?.message || 'Failed to fetch appointments')
@@ -26,7 +36,7 @@ const useAppointmentsByPatient = (userId: string | undefined) => {
       setLoading(false)
     }
     fetchAppointments()
-  }, [userId])
+  }, [patientId])
 
   return { loading, appointments }
 }

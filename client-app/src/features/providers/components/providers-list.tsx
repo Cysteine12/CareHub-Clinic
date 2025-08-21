@@ -15,7 +15,7 @@ import { Button } from '../../../components/ui/button'
 import { Calendar, Edit, Mail, Phone } from 'lucide-react'
 import { Avatar, AvatarFallback } from '../../../components/ui/avatar'
 import type { Appointment } from '../../../lib/type'
-import { formatDate } from '../../../lib/utils'
+import { formatDate, formatTextWithSize } from '../../../lib/utils'
 import { Badge } from '../../../components/ui/badge'
 import { useProviders, useSearchProvidersByName } from '../hook'
 
@@ -129,7 +129,7 @@ const ProvidersList = ({ searchValue, pagination, setPagination }: Props) => {
                       </div>
                       <div className="flex items-center text-sm text-muted-foreground">
                         <Mail className="mr-1 h-3 w-3" />
-                        {provider?.email?.toLowerCase()}
+                        {formatTextWithSize(provider?.email?.toLowerCase(), 25)}
                       </div>
                     </div>
                   </TableCell>

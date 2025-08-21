@@ -11,7 +11,6 @@ import {
 import { AppointmentPurpose, timeSlots } from '../../../lib/schema'
 import { Textarea } from '../../../components/ui/textarea'
 import { Button } from '../../../components/ui/button'
-import { useSearchPatientsByName } from '../../patients/hook'
 import type { Patient } from '../../patients/types'
 import { Checkbox } from '../../../components/ui/checkbox'
 
@@ -25,6 +24,7 @@ type ProviderAppointment = {
 }
 
 interface Props {
+  patient: Patient
   formData: ProviderAppointment
   setFormData: (formData: ProviderAppointment) => void
   onSubmit: (e: FormEvent) => void
@@ -32,14 +32,12 @@ interface Props {
 }
 
 const AppointmentForm = ({
+  patient,
   formData,
   setFormData,
   onSubmit,
   isLoading,
 }: Props) => {
-  const { data: patientsData, mutate: searchPatientsByName } =
-    useSearchPatientsByName()
-
   const handleInputChange = (
     field: keyof ProviderAppointment,
     value: string | boolean
@@ -47,38 +45,26 @@ const AppointmentForm = ({
     setFormData({ ...formData, [field]: value })
   }
 
-  const handleSearch = (value: string) => {
-    searchPatientsByName({ name: value, query: { page: 1, limit: 50 } })
-    handleInputChange('patient_id', value)
-  }
-
   return (
     <form onSubmit={onSubmit} className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="appointmentType">Patient *</Label>
-        <Input
-          list={'patients'}
-          value={formData.patient_id}
-          onChange={(e) => handleSearch(e.target.value)}
-          required
-        />
-        <datalist id={'patients'}>
-          {(patientsData?.data as Patient[])?.map((patient) => (
-            <option
-              value={`${patient?.first_name} ${patient?.last_name} - ${patient?.id}`}
-            />
-          ))}
-        </datalist>
+        <Label htmlFor="patient">Patient *</Label>
+        <div>
+          {patient.first_name} {patient.last_name}
+        </div>
+        <div className="text-muted-foreground lowercase">
+          {patient.email} | {patient.gender}
+        </div>
       </div>
       <div className="space-y-2">
-        <Label htmlFor="appointmentType">Appointment Purpose *</Label>
+        <Label htmlFor="purposes">Appointment Purpose *</Label>
         <Select
           value={formData.purposes}
           onValueChange={(e) => handleInputChange('purposes', e)}
           required
         >
           <SelectTrigger>
-            <SelectValue placeholder="Select appointment type" />
+            <SelectValue placeholder="Select appointment purpose" />
           </SelectTrigger>
           <SelectContent>
             {Object.entries(AppointmentPurpose).map(([key, label]) => (

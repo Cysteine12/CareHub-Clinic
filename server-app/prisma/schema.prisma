@@ -184,6 +184,8 @@ model AppointmentProvider {
   created_at      DateTime    @default(now())
   updated_at      DateTime    @updatedAt
 
+  events          Event[]
+
   provider        Provider    @relation(fields: [provider_id], references: [id])
   appointment     Appointment @relation(fields: [appointment_id], references: [id])
 
@@ -236,20 +238,22 @@ model Vital {
 }
 
 model Event {
-  id            String              @id @default(uuid())
-  type          EventType
-  appointment_id String
-  created_by_id String?
-  status        String?
-  vital_id      String?
-  soap_note_id  String?
-  created_at    DateTime            @default(now())
-  updated_at    DateTime            @updatedAt
+  id                      String              @id @default(uuid())
+  type                    EventType
+  appointment_id          String
+  created_by_id           String?
+  appointment_provider_id String?
+  status                  String?
+  vital_id                String?
+  soap_note_id            String?
+  created_at              DateTime            @default(now())
+  updated_at              DateTime            @updatedAt
 
-  appointment   Appointment         @relation(fields: [appointment_id], references: [id])
-  created_by    Provider?           @relation(fields: [created_by_id], references: [id])
-  soap_note     SoapNote?           @relation(fields: [soap_note_id], references: [id])
-  vitals        Vital?              @relation(fields: [vital_id], references: [id])
+  appointment             Appointment         @relation(fields: [appointment_id], references: [id])
+  created_by              Provider?           @relation(fields: [created_by_id], references: [id])
+  appointment_provider    AppointmentProvider?@relation(fields: [appointment_provider_id], references: [id])
+  soap_note               SoapNote?           @relation(fields: [soap_note_id], references: [id])
+  vitals                  Vital?              @relation(fields: [vital_id], references: [id])
 
   @@map("events")
 }
@@ -259,6 +263,7 @@ enum EventType {
   VITALS_UPDATED                @map("VITALS UPDATED")
   SOAP_NOTE_RECORDED            @map("SOAP NOTE RECORDED")
   SOAP_NOTE_UPDATED             @map("SOAP NOTE UPDATED")
+  PROVIDER_ASSIGNED             @map("PROVIDER ASSIGNED")
   APPOINTMENT_STATUS_CHANGED    @map("APPOINTMENT STATUS CHANGED")
 }
 

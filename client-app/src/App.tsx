@@ -22,7 +22,9 @@ import PatientProfile from './pages/patient/patient-profile'
 import PatientFiles from './pages/patient/patient-files'
 import { ProviderLayout } from './layout/providerLayout'
 import { useEffect } from 'react'
-import Appointments from './pages/admin/all-appointments'
+import ProviderAppointments from './pages/admin/appointments/all-appointments'
+import ViewAppointment from './pages/admin/appointments/view-appointment'
+import CreateAppointment from './pages/admin/appointments/create-appointment'
 import InsuranceCheck from './pages/admin/insurance-check'
 import AllPatients from './pages/admin/patients/all-patients'
 import MobileOutreach from './pages/admin/mobile-outreach'
@@ -32,16 +34,15 @@ import Settings from './pages/Settings'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import CreatePatient from './pages/admin/patients/create-patient'
 import ViewPatient from './pages/admin/patients/view-patient'
+import EditPatient from './pages/admin/patients/edit-patient'
 import VitalsSoapPage from './pages/vitals-soap'
 import OTPVerification from './components/auth/otp-verification'
-import AppointmentDetail from './pages/admin/appointment-detail'
 import PatientEditProfile from './pages/patient/patient-edit-profile'
 import AllProviders from './pages/admin/providers/all-providers'
 import CreateProvider from './pages/admin/providers/create-provider'
 import EditProvider from './pages/admin/providers/edit-provider'
 import About from './pages/About'
 import { teamArray } from './pages/about/about-data'
-import EditPatient from './pages/admin/patients/edit-patient'
 
 const queryClient = new QueryClient()
 
@@ -114,10 +115,17 @@ function App() {
           </Route>
           <Route element={<ProtectedLayout />}>
             <Route path="/provider/dashboard" element={<Dashboard />} />
-            <Route path="/provider/appointments" element={<Appointments />} />
+            <Route
+              path="/provider/appointments"
+              element={<ProviderAppointments />}
+            />
             <Route
               path="/provider/appointments/:id"
-              element={<AppointmentDetail />}
+              element={<ViewAppointment />}
+            />
+            <Route
+              path="/provider/appointments/new/:id"
+              element={<CreateAppointment />}
             />
 
             <Route
