@@ -23,7 +23,7 @@ import { Search, FileText, Activity } from 'lucide-react'
 import { type Appointment, type AppointmentStatus } from '../lib/type'
 import { type SoapNote } from '../lib/schema'
 import SoapNoteDialog from '../components/soap-note-dialog'
-import VitalsFormDialog from '../components/vitals-form'
+import VitalsFormDialog from '../features/vitals/components/vitals-form'
 import { useAuthStore } from '../store/auth-store'
 import { SoapNoteCard } from '../components/soap-note-card'
 import API from '../lib/api'
@@ -43,7 +43,7 @@ export default function VitalsSoapPage({
   }>()
   const location = useLocation()
   const passedAppointment = location.state?.appointment
-  
+
   const [selectedPatient, setSelectedPatient] = useState('')
   const [searchTerm, setSearchTerm] = useState('')
   const user = useAuthStore((state) => state.user)
@@ -83,7 +83,7 @@ export default function VitalsSoapPage({
     })[]
   >([])
   const [soapNotesLoading, setSoapNotesLoading] = useState(false)
-  
+
   // Determine default tab - if navigated from appointment detail, show history
   const defaultTab = passedAppointment ? 'history' : 'record-vitals'
 
@@ -131,7 +131,7 @@ export default function VitalsSoapPage({
         setIsLoading(false)
       }
     }
-    
+
     if (passedAppointment) {
       // Use appointment data passed via navigation state
       setAppointment(passedAppointment)
@@ -215,15 +215,20 @@ export default function VitalsSoapPage({
                     No appointment data available
                   </h2>
                   <p className="text-muted-foreground">
-                    {urlAppointmentId 
-                      ? 'Failed to load appointment data. Please check the appointment ID.' 
+                    {urlAppointmentId
+                      ? 'Failed to load appointment data. Please check the appointment ID.'
                       : 'Please select an appointment to view vitals and SOAP notes.'}
                   </p>
                   {/* Debug info */}
                   <div className="mt-4 text-xs text-gray-500">
                     <p>Debug: appointmentId = {urlAppointmentId || 'null'}</p>
-                    <p>Debug: passedAppointment = {passedAppointment ? 'present' : 'null'}</p>
-                    <p>Debug: appointment = {appointment ? 'present' : 'null'}</p>
+                    <p>
+                      Debug: passedAppointment ={' '}
+                      {passedAppointment ? 'present' : 'null'}
+                    </p>
+                    <p>
+                      Debug: appointment = {appointment ? 'present' : 'null'}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -321,15 +326,10 @@ export default function VitalsSoapPage({
                 <SoapNoteDialog
                   appointmentId={appointment.id}
                   vitals={appointment.vitals}
-                  purposes={
-                    appointment.purposes ||
-                    appointment.other_purpose
-                  }
+                  purposes={appointment.purposes || appointment.other_purpose}
                   setAppointmentId={setAppointmentId || (() => {})}
                   showAsDialog={false}
-                  onSoapNoteSaved={() =>
-                    fetchSoapNotes(appointment.id)
-                  }
+                  onSoapNoteSaved={() => fetchSoapNotes(appointment.id)}
                 />
               </CardContent>
             </Card>
@@ -345,13 +345,25 @@ export default function VitalsSoapPage({
                     No appointment data available
                   </h2>
                   <p className="text-muted-foreground">
-                    Please navigate from an appointment to view SOAP notes history.
+                    Please navigate from an appointment to view SOAP notes
+                    history.
                   </p>
                   {/* Debug info */}
                   <div className="mt-4 text-xs text-gray-500">
                     <p>Debug: appointmentId = {urlAppointmentId || 'null'}</p>
-                    <p>Debug: passedAppointment = {passedAppointment ? JSON.stringify(passedAppointment).substring(0, 100) + '...' : 'null'}</p>
-                    <p>Debug: appointment = {appointment ? JSON.stringify(appointment).substring(0, 100) + '...' : 'null'}</p>
+                    <p>
+                      Debug: passedAppointment ={' '}
+                      {passedAppointment
+                        ? JSON.stringify(passedAppointment).substring(0, 100) +
+                          '...'
+                        : 'null'}
+                    </p>
+                    <p>
+                      Debug: appointment ={' '}
+                      {appointment
+                        ? JSON.stringify(appointment).substring(0, 100) + '...'
+                        : 'null'}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -377,7 +389,11 @@ export default function VitalsSoapPage({
                 <Card>
                   <CardHeader>
                     <CardTitle>Recent SOAP Notes</CardTitle>
-                    <CardDescription>Latest clinical documentation for {appointment.patient?.first_name} {appointment.patient?.last_name}</CardDescription>
+                    <CardDescription>
+                      Latest clinical documentation for{' '}
+                      {appointment.patient?.first_name}{' '}
+                      {appointment.patient?.last_name}
+                    </CardDescription>
                   </CardHeader>
                   <CardContent>
                     {soapNotesLoading ? (

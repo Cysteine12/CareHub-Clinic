@@ -34,6 +34,8 @@ export interface IPagination {
 export type AppointmentStatus =
   (typeof AppointmentStatus)[keyof typeof AppointmentStatus]
 
+export type AppointmentPurposes = Appointment['purposes']
+
 export type Appointment = CreatePatientAppointmentSchema & {
   id: string
   status: AppointmentStatus

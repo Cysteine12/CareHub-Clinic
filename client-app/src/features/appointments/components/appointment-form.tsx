@@ -13,12 +13,13 @@ import { Textarea } from '../../../components/ui/textarea'
 import { Button } from '../../../components/ui/button'
 import type { Patient } from '../../patients/types'
 import { Checkbox } from '../../../components/ui/checkbox'
+import type { AppointmentPurposes } from '../types'
 
 type ProviderAppointment = {
   patient_id: string
   date: string
   time: string
-  purposes: string
+  purposes: AppointmentPurposes[number]
   other_purpose: string
   has_insurance: boolean
 }

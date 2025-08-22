@@ -19,6 +19,7 @@ import { useAppointments, useSearchAppointmentsByPatientName } from '../hook'
 import type { Patient } from '../../../patients/types'
 import { Badge } from '../../../../components/ui/badge'
 import { formatPurposeText, formatTimeToAmPm } from '../../../../lib/type'
+import { getBadgeVariant } from '../../util'
 
 interface Props {
   searchValue: string
@@ -143,19 +144,7 @@ const ProviderAppointmentList = ({
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center text-sm">
-                      <Badge
-                        variant={
-                          appointment?.status === 'COMPLETED'
-                            ? 'default'
-                            : appointment?.status === 'SCHEDULED'
-                            ? 'secondary'
-                            : appointment?.status === 'SUBMITTED'
-                            ? 'outline'
-                            : appointment?.status === 'CANCELLED'
-                            ? 'destructive'
-                            : 'pending'
-                        }
-                      >
+                      <Badge variant={getBadgeVariant(appointment?.status)}>
                         {appointment?.status?.replace('_', ' ')}
                       </Badge>
                     </div>

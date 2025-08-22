@@ -27,20 +27,21 @@ const getAppointments = catchAsync(async (req, res) => {
   const query = req.query
   const options = { page: Number(query.page), limit: Number(query.limit) }
 
-  let appointments = []
+  let response: [Appointment[], number] = [[], 0]
   if (['ADMIN', 'RECEPTIONIST'].includes(user.roleTitle!)) {
-    appointments = await appointmentService.findAppointments({}, options)
+    response = await appointmentService.findAppointments({}, options)
   } else {
-    appointments = await appointmentProviderService.findAppointmentProviders(
-      { provider_id: user.id },
+    response = await appointmentService.findAppointments(
+      { appointment_providers: { some: { provider_id: user.id } } },
       options
     )
-    appointments.map((appointmentProvider) => appointmentProvider.appointment)
   }
+  const [appointments, total] = response
 
   res.status(200).json({
     success: true,
     data: appointments,
+    total: total,
   })
 })
 
@@ -59,20 +60,21 @@ const getAppointmentsBySchedule = catchAsync(async (req, res) => {
     filters = { schedule: { path: ['date'], gte: startOfToday() } }
   }
 
-  let appointments
+  let response: [Appointment[], number] = [[], 0]
   if (['ADMIN', 'RECEPTIONIST'].includes(user.roleTitle!)) {
-    appointments = await appointmentService.findAppointments(filters, options)
+    response = await appointmentService.findAppointments(filters, options)
   } else {
-    appointments = await appointmentProviderService.findAppointmentProviders(
-      { provider_id: user.id, appointment: filters },
+    response = await appointmentService.findAppointments(
+      { appointment_providers: { some: { provider_id: user.id } }, ...filters },
       options
     )
-    appointments.map((appointmentProvider) => appointmentProvider.appointment)
   }
+  const [appointments, total] = response
 
   res.status(200).json({
     success: true,
     data: appointments,
+    total: total,
   })
 })
 
@@ -81,9 +83,9 @@ const searchAppointmentsByPatientName = catchAsync(async (req, res) => {
   const query = req.query
   const options = { page: Number(query.page), limit: Number(query.limit) }
 
-  let appointments = []
+  let response: [Appointment[], number] = [[], 0]
   if (['ADMIN', 'RECEPTIONIST'].includes(user.roleTitle!)) {
-    appointments = await appointmentService.findAppointments(
+    response = await appointmentService.findAppointments(
       {
         patient: {
           OR: [
@@ -95,26 +97,25 @@ const searchAppointmentsByPatientName = catchAsync(async (req, res) => {
       options
     )
   } else {
-    appointments = await appointmentProviderService.findAppointmentProviders(
+    response = await appointmentService.findAppointments(
       {
-        provider_id: user.id,
-        appointment: {
-          patient: {
-            OR: [
-              { first_name: { contains: query.search, mode: 'insensitive' } },
-              { last_name: { contains: query.search, mode: 'insensitive' } },
-            ],
-          },
+        appointment_providers: { some: { provider_id: user.id } },
+        patient: {
+          OR: [
+            { first_name: { contains: query.search, mode: 'insensitive' } },
+            { last_name: { contains: query.search, mode: 'insensitive' } },
+          ],
         },
       },
       options
     )
-    appointments.map((appointmentProvider) => appointmentProvider.appointment)
   }
+  const [appointments, total] = response
 
   res.status(200).json({
     success: true,
     data: appointments,
+    total: total,
   })
 })
 
@@ -124,7 +125,7 @@ const getAppointmentsByPatient = catchAsync(async (req, res) => {
 
   const options = { page: Number(query.page), limit: Number(query.limit) }
 
-  const appointments = await appointmentService.findAppointments(
+  const [appointments, total] = await appointmentService.findAppointments(
     { patient_id },
     options
   )
@@ -132,6 +133,7 @@ const getAppointmentsByPatient = catchAsync(async (req, res) => {
   res.status(200).json({
     success: true,
     data: appointments,
+    total: total,
   })
 })
 
@@ -141,14 +143,15 @@ const getAppointmentsByProvider = catchAsync(async (req, res) => {
 
   const options = { page: Number(query.page), limit: Number(query.limit) }
 
-  const appointments = await appointmentService.findAppointments(
-    { appointment_providers: { every: { provider_id } } },
+  const [appointments, total] = await appointmentService.findAppointments(
+    { appointment_providers: { some: { provider_id } } },
     options
   )
 
   res.status(200).json({
     success: true,
     data: appointments,
+    total: total,
   })
 })
 
@@ -276,50 +279,6 @@ const updateAppointmentStatus = catchAsync(async (req, res) => {
   })
 })
 
-const followUpAppointment = catchAsync(async (req, res) => {
-  const provider = req.user!
-  const id = req.params.id
-  const newAppointment: FollowUpAppointmentSchema = req.body
-
-  const appointment = await appointmentService.findAppointment({ id })
-  if (!appointment) throw new NotFoundError('Appointment not found')
-
-  const allowedStatuses = ['COMPLETED', 'CONFIRMED'] as AppointmentStatus[]
-
-  if (!allowedStatuses.includes(appointment.status)) {
-    throw new ValidationError(
-      `${appointment.status.toLowerCase()} appointments can't have follow-up`
-    )
-  }
-
-  const updatedAppointment = await appointmentService.updateAppointment(
-    { id },
-    {
-      is_follow_up_required: true,
-      follow_up_appointment: {
-        create: {
-          ...newAppointment,
-          status: AppointmentStatus.SCHEDULED,
-          patient_id: appointment.patient_id,
-          events: {
-            create: {
-              type: EventType.APPOINTMENT_STATUS_CHANGED,
-              created_by_id: provider.id,
-            },
-          },
-        },
-      },
-    }
-  )
-  if (!updatedAppointment) throw new NotFoundError('Appointment not found')
-
-  res.status(200).json({
-    success: true,
-    data: updatedAppointment,
-    message: 'Follow up appointment scheduled successfully',
-  })
-})
-
 const assignAppointmentProvider = catchAsync(async (req, res) => {
   const user = req.user!
   const { id: appointment_id } = req.params
@@ -349,6 +308,50 @@ const assignAppointmentProvider = catchAsync(async (req, res) => {
     success: true,
     message: 'Appointment provider assigned successfully',
     data: appointment,
+  })
+})
+
+const followUpAppointment = catchAsync(async (req, res) => {
+  const provider = req.user!
+  const id = req.params.id
+  const newAppointment: FollowUpAppointmentSchema = req.body
+
+  const appointment = await appointmentService.findAppointment({ id })
+  if (!appointment) throw new NotFoundError('Appointment not found')
+
+  const allowedStatuses = ['COMPLETED', 'CONFIRMED'] as AppointmentStatus[]
+
+  if (!allowedStatuses.includes(appointment.status)) {
+    throw new ValidationError(
+      `${appointment.status.toLowerCase()} appointments can't have follow-up`
+    )
+  }
+
+  const updatedAppointment = await appointmentService.updateAppointment(
+    { id },
+    {
+      is_follow_up_required: true,
+      follow_up_appointment: {
+        create: {
+          ...newAppointment,
+          status: AppointmentStatus.SUBMITTED,
+          patient_id: appointment.patient_id,
+          events: {
+            create: {
+              type: EventType.APPOINTMENT_STATUS_CHANGED,
+              created_by_id: provider.id,
+            },
+          },
+        },
+      },
+    }
+  )
+  if (!updatedAppointment) throw new NotFoundError('Appointment not found')
+
+  res.status(200).json({
+    success: true,
+    data: updatedAppointment,
+    message: 'Follow up appointment scheduled successfully',
   })
 })
 
@@ -390,7 +393,7 @@ export default {
   createAppointment,
   updateAppointment,
   updateAppointmentStatus,
-  followUpAppointment,
   assignAppointmentProvider,
+  followUpAppointment,
   deleteAppointment,
 }

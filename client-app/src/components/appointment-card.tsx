@@ -5,9 +5,11 @@ import { Button } from '../components/ui/button'
 import {
   formatDateParts,
   formatPurposeText,
+  formatTimeToAmPm,
   type Appointment,
 } from '../lib/type'
 import { formatTextWithSize } from '../lib/utils'
+import { getBadgeVariant } from '../features/appointments/util'
 
 interface AppointmentCardProps {
   appointment: Appointment
@@ -29,7 +31,7 @@ export default function AppointmentCard({ appointment }: AppointmentCardProps) {
           </div>
           <div className="text-xs text-muted-foreground flex items-center">
             <Clock className="h-3 w-3 inline mr-1" />
-            30 min
+            {formatTimeToAmPm(appointment.schedule.time)}
           </div>
         </div>
 
@@ -47,19 +49,7 @@ export default function AppointmentCard({ appointment }: AppointmentCardProps) {
                 'No patient info'
               )}
             </span>
-            <Badge
-              variant={
-                appointment?.status === 'COMPLETED'
-                  ? 'default'
-                  : appointment?.status === 'SCHEDULED'
-                  ? 'secondary'
-                  : appointment?.status === 'SUBMITTED'
-                  ? 'outline'
-                  : appointment?.status === 'CANCELLED'
-                  ? 'destructive'
-                  : 'pending'
-              }
-            >
+            <Badge variant={getBadgeVariant(appointment?.status)}>
               {appointment?.status}
             </Badge>
           </div>

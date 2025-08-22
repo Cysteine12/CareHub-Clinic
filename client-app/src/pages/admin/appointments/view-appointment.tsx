@@ -14,37 +14,28 @@ import {
   TabsTrigger,
 } from '../../../components/ui/tabs'
 import { Separator } from '../../../components/ui/separator'
-import {
-  Calendar,
-  User,
-  Phone,
-  Mail,
-  MapPin,
-  FileText,
-  Printer,
-  Activity,
-  ArrowLeft,
-} from 'lucide-react'
+import { Calendar, FileText, Printer, Activity, ArrowLeft } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { format } from 'date-fns'
 import SoapNoteDialog from '../../../components/soap-note-dialog'
-import VitalsFormDialog from '../../../components/vitals-form'
-import { useAuthStore } from '../../../store/auth-store'
+import VitalsFormDialog from '../../../features/vitals/components/vitals-form'
 import AppointmentProviderList from '../../../features/appointments/providers/components/appointment-provider-list'
 import { useAppointment } from '../../../features/appointments/providers/hook'
 import type {
   Appointment,
   AppointmentProvider,
 } from '../../../features/appointments/types'
-import type { SoapNote, Vitals } from '../../../lib/type'
+import { formatTimeToAmPm, type SoapNote } from '../../../lib/type'
 import type { Patient } from '../../../features/patients/types'
 import type { Provider } from '../../../features/providers/types'
 import AppointmentStatusCard from '../../../features/appointments/providers/components/appointment-status-card'
+import AppointmentPatientCard from '../../../features/appointments/providers/components/appointment-patient-card'
+import type { Vital } from '../../../features/vitals/types'
+import { formatDate, formatDateIntl } from '../../../lib/utils'
+import VitalCard from '../../../features/vitals/components/vital-card'
 
 const AppointmentDetail = () => {
   const { id } = useParams()
   const navigate = useNavigate()
-  const user = useAuthStore((state) => state.user)
   const {
     data: appointmentData,
     isLoading,
@@ -53,7 +44,7 @@ const AppointmentDetail = () => {
   } = useAppointment(id)
   const [appointment, setAppointment] = useState<
     | (Appointment & {
-        vital: Vitals
+        vital: Vital
         soap_note: SoapNote
         appointment_providers: (AppointmentProvider & { provider: Provider })[]
         patient: Patient
@@ -126,12 +117,10 @@ const AppointmentDetail = () => {
               Appointment Details
             </h1>
             <p className="text-muted-foreground">
-              {appointment?.patient?.first_name} •{' '}
+              {appointment?.patient?.first_name}{' '}
               {appointment?.patient?.last_name} •{' '}
-              {appointment?.schedule?.date
-                ? format(new Date(appointment.schedule.date), 'EEE dd')
-                : 'N/A'}{' '}
-              at {appointment?.schedule?.time}
+              {formatDate(appointment?.schedule?.date)} at{' '}
+              {formatTimeToAmPm(appointment?.schedule?.time)}
             </p>
           </div>
         </div>
@@ -148,6 +137,7 @@ const AppointmentDetail = () => {
         <AppointmentStatusCard
           appointmentId={appointment.id}
           appointmentStatus={appointment.status}
+          appointmentPatientId={appointment.patient.id}
         />
       )}
 
@@ -169,16 +159,14 @@ const AppointmentDetail = () => {
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium">Date:</span>
-                <span>
-                  {new Date(appointment?.schedule.date).toLocaleDateString()}
-                </span>
+                <span>{formatDateIntl(appointment?.schedule?.date)}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium">Time:</span>
-                <span>{appointment?.schedule.time}</span>
+                <span>{formatTimeToAmPm(appointment?.schedule?.time)}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">Type:</span>
+                <span className="text-sm font-medium">Purpose:</span>
                 <span>
                   {appointment?.purposes?.map((status: string) =>
                     status
@@ -192,7 +180,7 @@ const AppointmentDetail = () => {
                 </span>
               </div>
               <Separator />
-              <div className="space-y-2">
+              <div className="flex items-center justify-between space-y-2">
                 <span className="text-sm font-medium">Reason for Visit:</span>
                 <p className="text-sm text-muted-foreground">
                   {appointment?.other_purpose
@@ -210,206 +198,42 @@ const AppointmentDetail = () => {
         </TabsContent>
 
         <TabsContent value="patient" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <User className="h-5 w-5 mr-2" />
-                Patient Information
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">Patient ID:</span>
-                    <span>{appointment?.patient_id}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">Full Name:</span>
-                    <span>
-                      {appointment?.patient?.first_name}{' '}
-                      {appointment?.patient?.last_name}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">Date of Birth:</span>
-                    <span>
-                      {new Date(
-                        appointment?.patient?.date_of_birth
-                      ).toLocaleDateString()}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">Phone:</span>
-                    <span className="flex items-center">
-                      <Phone className="h-4 w-4 mr-1" />
-                      {appointment?.patient?.phone}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">Email:</span>
-                    <span className="flex items-center">
-                      <Mail className="h-4 w-4 mr-1" />
-                      {appointment?.patient?.email}
-                    </span>
-                  </div>
-                </div>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">Address:</span>
-                    <p className="text-sm text-muted-foreground flex ">
-                      <MapPin className="h-4 w-4 mr-1 mt-0.5" />
-                      {appointment?.patient?.address}
-                    </p>
-                  </div>
-                  <div className="flex items-center justify-between space-y-2">
-                    <span className="text-sm font-medium">Insurance:</span>
-                    <span>{appointment?.patient?.insurance_coverage}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium">
-                      Emergency Contact:
-                    </span>
-                    <p className="text-sm text-muted-foreground">
-                      {appointment?.patient?.emergency_contact_name}
-                    </p>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium">Gender:</span>
-                    <p className="text-sm text-muted-foreground">
-                      {appointment?.patient?.gender}
-                    </p>
-                  </div>
-                  <div className="flex justify-between items-center space-y-2">
-                    <span className="text-sm font-medium">Blood Group:</span>
-                    <p className="text-sm text-muted-foreground">
-                      {appointment?.patient?.blood_group}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="patient" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <User className="h-5 w-5 mr-2" />
-                Patient Information
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">Patient ID:</span>
-                    <span>{appointment?.patient_id}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">Full Name:</span>
-                    <span>
-                      {appointment?.patient?.first_name}{' '}
-                      {appointment?.patient?.last_name}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">Date of Birth:</span>
-                    <span>
-                      {new Date(
-                        appointment?.patient?.date_of_birth
-                      ).toLocaleDateString()}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">Phone:</span>
-                    <span className="flex items-center">
-                      <Phone className="h-4 w-4 mr-1" />
-                      {appointment?.patient?.phone}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">Email:</span>
-                    <span className="flex items-center">
-                      <Mail className="h-4 w-4 mr-1" />
-                      {appointment?.patient?.email}
-                    </span>
-                  </div>
-                </div>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">Address:</span>
-                    <p className="text-sm text-muted-foreground flex ">
-                      <MapPin className="h-4 w-4 mr-1 mt-0.5" />
-                      {appointment?.patient?.address}
-                    </p>
-                  </div>
-                  <div className="flex items-center justify-between space-y-2">
-                    <span className="text-sm font-medium">Insurance:</span>
-                    <span>{appointment?.patient?.insurance_coverage}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium">
-                      Emergency Contact:
-                    </span>
-                    <p className="text-sm text-muted-foreground">
-                      {appointment?.patient?.emergency_contact_name}
-                    </p>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium">Gender:</span>
-                    <p className="text-sm text-muted-foreground">
-                      {appointment?.patient?.gender}
-                    </p>
-                  </div>
-                  <div className="flex justify-between items-center space-y-2">
-                    <span className="text-sm font-medium">Blood Group:</span>
-                    <p className="text-sm text-muted-foreground">
-                      {appointment?.patient?.blood_group}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <AppointmentPatientCard patient={appointment?.patient} />
         </TabsContent>
 
         <TabsContent value="vitals" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-y-4">
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Activity className="h-5 w-5 mr-2" />
-                  Vital Signs
-                </CardTitle>
-                <CardDescription>
-                  {appointment?.vital?.created_at
-                    ? `Recorded at ${new Date(
-                        appointment.vital.created_at
-                      ).toLocaleDateString()}`
-                    : 'No vitals recorded yet'}
-                </CardDescription>
+                <div className="flex justify-between">
+                  <div>
+                    <CardTitle className="flex items-center">
+                      <Activity className="h-5 w-5 mr-2" />
+                      Vital Signs
+                    </CardTitle>
+                    <CardDescription>
+                      {appointment?.vital
+                        ? `Last recorded on ${formatDate(
+                            appointment.vital.updated_at
+                          )} at ${formatTimeToAmPm(
+                            appointment.vital.updated_at
+                          )}`
+                        : 'No vitals recorded yet'}
+                    </CardDescription>
+                  </div>
+                  {appointment &&
+                    ['CHECKED_IN', 'ATTENDING', 'ATTENDED'].includes(
+                      appointment.status
+                    ) && (
+                      <VitalsFormDialog
+                        appointmentId={appointment.id}
+                        appointmentVital={appointment.vital}
+                      />
+                    )}
+                </div>
               </CardHeader>
               <CardContent className="space-y-4">
-                {user?.id && appointment?.id ? (
-                  <VitalsFormDialog
-                    appointmentId={appointment.id}
-                    setAppointmentId={() => {}}
-                    userId={user.id}
-                    setHasVitals={() => {}}
-                    setAppointmentStatus={() => {}}
-                    showAsDialog={true}
-                  />
-                ) : (
-                  <div className="text-center py-4">
-                    <p className="text-muted-foreground">
-                      {!user?.id
-                        ? 'Please log in to record vitals'
-                        : 'Loading appointment data...'}
-                    </p>
-                  </div>
-                )}
+                {appointment?.vital && <VitalCard vital={appointment.vital} />}
               </CardContent>
             </Card>
 

@@ -19,17 +19,20 @@ const findAppointments = async (
     page?: number
     limit?: number
   }
-): Promise<Appointment[]> => {
+): Promise<[Appointment[], number]> => {
   if (options?.page && options?.limit) {
     options.skip = (options?.page - 1) * options?.limit
   }
 
-  return await prisma.appointment.findMany({
-    where: filter,
-    skip: options?.skip || 0,
-    take: options?.limit || 20,
-    include: { patient: { omit: { password: true } } },
-  })
+  return await prisma.$transaction([
+    prisma.appointment.findMany({
+      where: filter,
+      skip: options?.skip || 0,
+      take: options?.limit || 20,
+      include: { patient: { omit: { password: true } } },
+    }),
+    prisma.appointment.count({ where: filter }),
+  ])
 }
 
 const findAppointment = async (
@@ -83,7 +86,10 @@ const updateAppointment = async (
   return await prisma.appointment.update({
     where: filter,
     data: payload,
-    include: { patient: { omit: { password: true } } },
+    include: {
+      patient: { omit: { password: true } },
+      follow_up_appointment: true,
+    },
   })
 }
 

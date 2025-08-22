@@ -69,19 +69,19 @@ router.patch(
 )
 
 router.patch(
-  '/:id/followup',
-  authenticate(UserType.PROVIDER),
-  authorize([ProviderRoleTitle.ADMIN, ProviderRoleTitle.RECEPTIONIST]),
-  validate(appointmentValidation.followUpAppointmentSchema),
-  providerAppointmentController.followUpAppointment
-)
-
-router.patch(
   '/:id/assign',
   authenticate(UserType.PROVIDER),
   authorize([ProviderRoleTitle.ADMIN, ProviderRoleTitle.RECEPTIONIST]),
   validate(appointmentValidation.assignProviderSchema),
   providerAppointmentController.assignAppointmentProvider
+)
+
+router.patch(
+  '/:id/followup',
+  authenticate(UserType.PROVIDER),
+  authorize([ProviderRoleTitle.ADMIN, ProviderRoleTitle.RECEPTIONIST]),
+  validate(appointmentValidation.followUpAppointmentSchema),
+  providerAppointmentController.followUpAppointment
 )
 
 router.delete(

@@ -22,6 +22,7 @@ import {
 import { useProviders } from '../../../providers/hook'
 import { Button } from '../../../../components/ui/button'
 import { useAuthStore } from '../../../../store/auth-store'
+import { toast } from 'sonner'
 
 type AppointmentProviderListProps = {
   appointmentId: string | undefined
@@ -36,17 +37,21 @@ export default function AppointmentProviderList({
 }: AppointmentProviderListProps) {
   const { user } = useAuthStore()
   const [assignedProvider, setAssignedProvider] = useState('')
-  const { mutate: assignProvider } = useAssignAppointmentProvider()
+  const { mutate: assignProvider } = useAssignAppointmentProvider(appointmentId)
   const { data: providersData } = useProviders({ page: 1, limit: 200 })
 
   const handleAssignProvider = (e: FormEvent) => {
     e.preventDefault()
-    if (!appointmentId) return
+    if (!appointmentId || !assignedProvider) {
+      toast.error('Please select a provider')
+      return
+    }
 
     assignProvider({
       id: appointmentId,
       payload: { provider_id: assignedProvider },
     })
+    setAssignedProvider('')
   }
 
   return (
@@ -65,6 +70,7 @@ export default function AppointmentProviderList({
               <Select
                 value={assignedProvider}
                 onValueChange={(e) => setAssignedProvider(e)}
+                required
               >
                 <SelectTrigger className="w-[250px]">
                   <SelectValue placeholder="Select Provider" />
@@ -86,7 +92,7 @@ export default function AppointmentProviderList({
           )}
 
         <div className="space-y-4">
-          {!appointmentProviders && (
+          {!appointmentProviders?.length && (
             <div className="text-sm mx-auto text-center">
               No provider assigned yet
             </div>

@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   assignAppointmentProvider,
   createAppointment,
+  followUpAppointment,
   getAppointment,
   getAppointments,
   getAppointmentsByPatient,
@@ -14,6 +15,7 @@ import {
 import type {
   AssignProviderSchema,
   CreateProviderAppointmentSchema,
+  FollowUpAppointmentSchema,
   UpdateAppointmentStatusSchema,
   UpdateProviderAppointmentSchema,
 } from '../schema'
@@ -76,7 +78,7 @@ const useCreateAppointment = () => {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['appointments'] })
       toast.success(data.message)
-      navigate(`/provider/Appointments/${data.data.id}`)
+      navigate(`/provider/appointments/${data.data.id}`)
     },
     onError: (data: AxiosError<APIResponse>) => {
       toast.error(data.response?.data?.message)
@@ -131,7 +133,7 @@ const useUpdateAppointmentStatus = () => {
   })
 }
 
-const useAssignAppointmentProvider = () => {
+const useAssignAppointmentProvider = (id: string | undefined) => {
   const queryClient = useQueryClient()
   type AssignAppointmentProviderMutation = {
     id: string
@@ -142,8 +144,33 @@ const useAssignAppointmentProvider = () => {
     mutationFn: ({ id, payload }: AssignAppointmentProviderMutation) =>
       assignAppointmentProvider(id, payload),
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['appointments', ''] })
       toast.success(data.message)
+      queryClient.invalidateQueries({ queryKey: ['appointments', id] })
+      return
+    },
+    onError: (data: AxiosError<APIResponse>) => {
+      toast.error(data.response?.data?.message)
+    },
+  })
+}
+
+const useFollowUpAppointment = () => {
+  const navigate = useNavigate()
+  const queryClient = useQueryClient()
+  type FollowUpAppointmentMutation = {
+    id: string
+    payload: FollowUpAppointmentSchema
+  }
+
+  return useMutation({
+    mutationFn: ({ id, payload }: FollowUpAppointmentMutation) =>
+      followUpAppointment(id, payload),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({
+        queryKey: ['appointments', data.data.id],
+      })
+      toast.success(data.message)
+      navigate(`/provider/appointments/${data.data.follow_up_appointment.id}`)
     },
     onError: (data: AxiosError<APIResponse>) => {
       toast.error(data.response?.data?.message)
@@ -162,4 +189,5 @@ export {
   useUpdateAppointment,
   useUpdateAppointmentStatus,
   useAssignAppointmentProvider,
+  useFollowUpAppointment,
 }

@@ -84,23 +84,23 @@ const updateAppointmentStatus = async (
   return data
 }
 
-const followUpAppointment = async (
-  id: string,
-  payload: FollowUpAppointmentSchema
-) => {
-  const { data } = await API.patch(
-    `/api/provider/appointments/${id}/followup`,
-    payload
-  )
-  return data
-}
-
 const assignAppointmentProvider = async (
   id: string,
   payload: AssignProviderSchema
 ) => {
   const { data } = await API.patch(
     `/api/provider/appointments/${id}/assign`,
+    payload
+  )
+  return data
+}
+
+const followUpAppointment = async (
+  id: string,
+  payload: FollowUpAppointmentSchema
+) => {
+  const { data } = await API.patch(
+    `/api/provider/appointments/${id}/followup`,
     payload
   )
   return data

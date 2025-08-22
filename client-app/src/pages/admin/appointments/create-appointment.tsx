@@ -1,29 +1,38 @@
 import { useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
-import API from '../../../lib/api'
-import { toast } from 'sonner'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import AppointmentForm from '../../../features/appointments/components/appointment-form'
 import { usePatient } from '../../../features/patients/hook'
 import { Card, CardContent, CardHeader } from '../../../components/ui/card'
 import { Button } from '../../../components/ui/button'
 import { ArrowLeft } from 'lucide-react'
+import {
+  useCreateAppointment,
+  useFollowUpAppointment,
+} from '../../../features/appointments/providers/hook'
+import type { AppointmentPurposes } from '../../../features/appointments/types'
 
 const CreateAppointment = () => {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const { id } = useParams()
   const { data: patientData, isLoading } = usePatient(id)
+  const { mutate: createAppointment } = useCreateAppointment()
+  const { mutate: followupAppointment } = useFollowUpAppointment()
+
+  const followedUpId = searchParams.get('followedUpId')
 
   const [formData, setFormData] = useState({
     patient_id: '',
     date: '',
     time: '',
-    purposes: '',
+    purposes: '' as AppointmentPurposes[number],
     other_purpose: '',
     has_insurance: false,
   })
 
   const handleScheduleAppointment = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!id) return
 
     const payload = {
       patient_id: id,
@@ -39,13 +48,11 @@ const CreateAppointment = () => {
       other_purpose: formData.other_purpose,
       has_insurance: formData.has_insurance,
     }
-
-    const { data } = await API.post('/api/provider/appointments', payload)
-    if (!data?.success) return toast.error(data.message)
-
-    toast.success(data.message)
-
-    navigate(`/provider/appointments/${data.data.id}`)
+    if (followedUpId) {
+      followupAppointment({ id: followedUpId, payload })
+    } else {
+      createAppointment(payload)
+    }
   }
 
   if (isLoading) {
@@ -70,7 +77,7 @@ const CreateAppointment = () => {
             Back
           </Button>
           <h2 className="text-3xl font-bold tracking-tight">
-            Book New Appointment
+            Book {followedUpId ? 'Follow-Up' : 'New'} Appointment
           </h2>
         </div>
 
