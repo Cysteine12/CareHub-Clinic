@@ -50,7 +50,7 @@ export default function AppointmentCard({ appointment }: AppointmentCardProps) {
               )}
             </span>
             <Badge variant={getBadgeVariant(appointment?.status)}>
-              {appointment?.status}
+              {appointment?.status.replace('_', ' ')}
             </Badge>
           </div>
 

@@ -17,7 +17,7 @@ import {
   Phone,
   MapPin,
 } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import {
   formatPurposeText,
@@ -25,8 +25,10 @@ import {
   type Appointment,
 } from '../../lib/type'
 import API from '../../lib/api'
+import { getBadgeVariant } from '../../features/appointments/util'
 
 export default function AdminDashboard() {
+  const navigate = useNavigate()
   const [stats, setStats] = useState<{
     todayAppointments: Appointment[]
     totalActivePatientsInLastMonth: number
@@ -127,9 +129,13 @@ export default function AdminDashboard() {
             </CardHeader>
             <CardContent>
               {todayAppointments?.map((appointment) => (
-                <div
+                <Button
+                  variant={'ghost'}
+                  onClick={() =>
+                    navigate(`/provider/appointments/${appointment?.id}`)
+                  }
                   key={appointment?.id}
-                  className="flex items-center justify-between p-3 border border-muted rounded-lg"
+                  className="w-full flex items-center justify-between border rounded-lg text-wrap h-auto"
                 >
                   <div className="flex items-center space-x-3">
                     <div className="text-sm font-medium">
@@ -145,20 +151,10 @@ export default function AdminDashboard() {
                       </div>
                     </div>
                   </div>
-                  <Badge
-                    variant={
-                      appointment?.status === 'SCHEDULED'
-                        ? 'default'
-                        : appointment?.status === 'SUBMITTED'
-                        ? 'secondary'
-                        : appointment?.status === 'CANCELLED'
-                        ? 'destructive'
-                        : 'outline'
-                    }
-                  >
-                    {appointment?.status}
+                  <Badge variant={getBadgeVariant(appointment?.status)}>
+                    {appointment?.status?.replace('_', ' ')}
                   </Badge>
-                </div>
+                </Button>
               ))}
             </CardContent>
           </Card>

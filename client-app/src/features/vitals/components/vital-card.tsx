@@ -7,6 +7,7 @@ import {
   Scale,
   Thermometer,
   Wind,
+  FileText,
 } from 'lucide-react'
 import type { Vital } from '../types'
 
@@ -63,25 +64,36 @@ const VitalCard = ({ vital }: { vital: Vital }) => {
   ]
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-      {vitals.map((vital) => (
-        <div
-          key={vital.key}
-          className="bg-muted rounded-lg p-4 hover:bg-muted-foreground cursor-pointer"
-        >
-          <div className="flex justify-between">
-            <div>
-              <div className="text-nowrap">{vital.key}</div>
-              <div className="">
-                <span className="text-2xl font-bold">{vital.data}</span>
-                <span className="text-sm">{vital.unit}</span>
+    <>
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+        {vitals.map((vital) => (
+          <div
+            key={vital.key}
+            className="bg-muted rounded-lg p-4 hover:bg-muted-foreground cursor-pointer"
+          >
+            <div className="flex justify-between">
+              <div>
+                <div className="text-nowrap">{vital.key}</div>
+                <div className="">
+                  <span className="text-2xl font-bold">
+                    {vital.data || 'N/A'}
+                  </span>
+                  <span className="text-sm">{vital.data && vital.unit}</span>
+                </div>
               </div>
+              <div className="">{vital.icon}</div>
             </div>
-            <div className="">{vital.icon}</div>
           </div>
+        ))}
+      </div>
+      <div className="bg-muted rounded-lg p-4 hover:bg-muted-foreground cursor-pointer">
+        <div className="flex items-center">
+          <FileText className="h-4 w-4 mr-2" />
+          Note
         </div>
-      ))}
-    </div>
+        <div>{vital.others ? vital.others : 'None provided'}</div>
+      </div>
+    </>
   )
 }
 export default VitalCard

@@ -26,6 +26,7 @@ import { toast } from 'sonner'
 
 type AppointmentProviderListProps = {
   appointmentId: string | undefined
+  appointmentStatus: string | undefined
   appointmentProviders:
     | (AppointmentProvider & { provider: Provider })[]
     | undefined
@@ -33,6 +34,7 @@ type AppointmentProviderListProps = {
 
 export default function AppointmentProviderList({
   appointmentId,
+  appointmentStatus,
   appointmentProviders,
 }: AppointmentProviderListProps) {
   const { user } = useAuthStore()
@@ -62,7 +64,11 @@ export default function AppointmentProviderList({
       </CardHeader>
       <CardContent>
         {user?.role_title &&
-          ['ADMIN', 'RECEPTIONIST'].includes(user.role_title) && (
+          ['ADMIN', 'RECEPTIONIST'].includes(user.role_title) &&
+          appointmentStatus &&
+          !['SUBMITTED', 'NO_SHOW', 'CANCELLED', 'COMPLETED'].includes(
+            appointmentStatus
+          ) && (
             <form
               onSubmit={handleAssignProvider}
               className="flex justify-between items-center space-y-4 py-2"
@@ -98,7 +104,7 @@ export default function AppointmentProviderList({
             </div>
           )}
           {appointmentProviders?.map((appointmentProvider) => (
-            <AppointmentProviderCard
+            <AppointmentProviderItem
               key={appointmentProvider?.id}
               provider={appointmentProvider?.provider}
               assignedAt={appointmentProvider?.created_at}
@@ -115,7 +121,7 @@ type AppointmentProviderCardProps = {
   assignedAt: string | undefined
 }
 
-const AppointmentProviderCard = ({
+const AppointmentProviderItem = ({
   provider,
   assignedAt,
 }: AppointmentProviderCardProps) => {

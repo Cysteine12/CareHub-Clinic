@@ -16,7 +16,6 @@ import {
 import { Separator } from '../../../components/ui/separator'
 import { Calendar, FileText, Printer, Activity, ArrowLeft } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import SoapNoteDialog from '../../../components/soap-note-dialog'
 import VitalsFormDialog from '../../../features/vitals/components/vitals-form'
 import AppointmentProviderList from '../../../features/appointments/providers/components/appointment-provider-list'
 import { useAppointment } from '../../../features/appointments/providers/hook'
@@ -24,7 +23,7 @@ import type {
   Appointment,
   AppointmentProvider,
 } from '../../../features/appointments/types'
-import { formatTimeToAmPm, type SoapNote } from '../../../lib/type'
+import { formatTimeToAmPm } from '../../../lib/type'
 import type { Patient } from '../../../features/patients/types'
 import type { Provider } from '../../../features/providers/types'
 import AppointmentStatusCard from '../../../features/appointments/providers/components/appointment-status-card'
@@ -32,9 +31,14 @@ import AppointmentPatientCard from '../../../features/appointments/providers/com
 import type { Vital } from '../../../features/vitals/types'
 import { formatDate, formatDateIntl } from '../../../lib/utils'
 import VitalCard from '../../../features/vitals/components/vital-card'
+import SoapNoteFormDialog from '../../../features/soapNotes/components/soap-note-form'
+import type { SoapNote } from '../../../features/soapNotes/types'
+import { useAuthStore } from '../../../store/auth-store'
+import SoapNoteList from '../../../features/soapNotes/components/soap-note-list'
 
 const AppointmentDetail = () => {
   const { id } = useParams()
+  const { user } = useAuthStore()
   const navigate = useNavigate()
   const {
     data: appointmentData,
@@ -45,14 +49,12 @@ const AppointmentDetail = () => {
   const [appointment, setAppointment] = useState<
     | (Appointment & {
         vital: Vital
-        soap_note: SoapNote
+        soap_notes: SoapNote[]
         appointment_providers: (AppointmentProvider & { provider: Provider })[]
         patient: Patient
       })
     | null
   >(null)
-
-  const [soapNoteSaved, setSoapNoteSaved] = useState(false)
 
   useEffect(() => {
     if (appointmentData?.data) {
@@ -193,6 +195,7 @@ const AppointmentDetail = () => {
 
           <AppointmentProviderList
             appointmentId={id}
+            appointmentStatus={appointment?.status}
             appointmentProviders={appointment?.appointment_providers}
           />
         </TabsContent>
@@ -239,44 +242,41 @@ const AppointmentDetail = () => {
 
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center">
-                  <FileText className="h-5 w-5 mr-2" />
-                  Clinical Notes
-                </CardTitle>
+                <div className="flex justify-between">
+                  <div>
+                    <CardTitle className="flex items-center">
+                      <FileText className="h-5 w-5 mr-2" />
+                      Clinical Notes
+                    </CardTitle>
+                    <CardDescription>
+                      {appointment?.vital
+                        ? `${appointment.soap_notes.length} note(s) recorded`
+                        : 'No notes recorded yet'}
+                    </CardDescription>
+                  </div>
+                  {appointment &&
+                    ['CHECKED_IN', 'ATTENDING', 'ATTENDED'].includes(
+                      appointment.status
+                    ) && (
+                      <SoapNoteFormDialog
+                        appointmentId={appointment.id}
+                        appointmentVital={appointment.vital}
+                        appointmentPurposes={appointment.purposes}
+                        appointmentSoapNote={
+                          appointment.soap_notes.filter(
+                            (soap_note) => soap_note.created_by_id === user?.id
+                          )[0]
+                        }
+                      />
+                    )}
+                </div>
               </CardHeader>
               <CardContent className="space-y-4">
-                {!soapNoteSaved ? (
-                  <SoapNoteDialog
-                    appointmentId={appointment?.id}
-                    vitals={appointment?.vital || {}}
-                    purposes={appointment?.purposes || []}
-                    setAppointmentId={() => {}}
-                    appointment={appointment}
-                    showAsDialog={false}
-                    onSoapNoteSaved={() => setSoapNoteSaved(true)}
+                {appointment?.vital && (
+                  <SoapNoteList
+                    soapNotes={appointment.soap_notes}
+                    appointmentProviders={appointment.appointment_providers}
                   />
-                ) : (
-                  <div className="space-y-4">
-                    <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-                      <p className="text-green-800 font-medium">
-                        ✅ SOAP Note saved successfully!
-                      </p>
-                    </div>
-                    <div className="flex gap-3">
-                      <Button
-                        variant="outline"
-                        onClick={() => setSoapNoteSaved(false)}
-                        className="flex-1"
-                      >
-                        <FileText className="h-4 w-4 mr-2" />
-                        Add Another SOAP Note
-                      </Button>
-                      <Button className="flex-1">
-                        <Activity className="h-4 w-4 mr-2" />
-                        View SOAP Notes
-                      </Button>
-                    </div>
-                  </div>
                 )}
               </CardContent>
             </Card>

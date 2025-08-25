@@ -1,57 +1,30 @@
-import { Search, ArrowLeft, CheckCircle, Eye, AlertCircle } from 'lucide-react'
+import { Search, ArrowLeft, AlertCircle } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Button } from '../../components/ui/button'
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '../../components/ui/card'
-import { Badge } from '../../components/ui/badge'
+import { Card, CardContent, CardHeader } from '../../components/ui/card'
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
 } from '../../components/ui/tabs'
-import { toast } from 'sonner'
 import { Skeleton } from '../../components/ui/skeleton'
 import { Alert } from '../../components/ui/alert'
-import {
-  formatDateParts,
-  formatPurposeText,
-  formatTimeToAmPm,
-  type Appointment,
-} from '../../lib/type'
-import API from '../../lib/api'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import PatientAppointmentForm from '../../features/appointments/components/patient-appointment-form'
-
-const recentVisits = [
-  {
-    id: 1,
-    date: '2024-01-10',
-    provider: 'Dr. Smith',
-    type: 'Consultation',
-    diagnosis: 'Hypertension monitoring',
-    status: 'completed',
-  },
-  {
-    id: 2,
-    date: '2023-12-15',
-    provider: 'Dr. Wilson',
-    type: 'Lab Results Review',
-    diagnosis: 'Normal blood work',
-    status: 'completed',
-  },
-]
+import { useAppointments } from '../../features/appointments/patients/hook'
+import { PatientAppointmentList } from '../../features/appointments/components/patient-appointment-list'
 
 export default function PatientAppointments() {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
   const [tab, setTab] = useState('all')
-  const [loading, setLoading] = useState(false)
-  const [appointments, setAppointments] = useState<Appointment[]>([])
+  const [pagination, setPagination] = useState({
+    page: Number(searchParams.get('page')) || 1,
+    limit: 20,
+    total: 0,
+  })
+  const { data: appointmentsData, isLoading } = useAppointments(pagination)
 
   useEffect(() => {
     if (searchParams.get('tab')) {
@@ -60,20 +33,15 @@ export default function PatientAppointments() {
   }, [])
 
   useEffect(() => {
-    if (tab === 'all') {
-      const fetchAppointments = async () => {
-        setLoading(true)
-        const { data } = await API.get(`/api/patient/appointments`)
-
-        if (!data?.success) {
-          toast.error(data?.message || 'Failed to fetch appointments')
-        }
-        setAppointments(data?.data ?? [])
-        setLoading(false)
-      }
-      fetchAppointments()
+    if (appointmentsData) {
+      setPagination({ ...pagination, total: appointmentsData?.total })
     }
-  }, [tab])
+  }, [appointmentsData?.total])
+
+  useEffect(() => {
+    const page = Number(searchParams.get('page')) || 1
+    setPagination((prevPagination) => ({ ...prevPagination, page }))
+  }, [searchParams.get('page')])
 
   const AppointmentListSkeleton = () => (
     <div className="grid gap-6">
@@ -109,121 +77,6 @@ export default function PatientAppointments() {
     </div>
   )
 
-  const AppointmentList = () => (
-    <div className="grid gap-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Upcoming Appointments</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {appointments?.length === 0 ? (
-              <div className="text-center space-y-1">
-                <h1 className="text-lg font-semibold text-muted-foreground">
-                  No Scheduled Appointments
-                </h1>
-                <p className="text-sm text-gray-500">
-                  You don't have any appointments yet. Schedule one to get
-                  started.
-                </p>
-              </div>
-            ) : (
-              appointments?.map((appointment) => (
-                <div
-                  key={appointment.id}
-                  className="flex items-center justify-between p-4 border border-muted rounded-lg"
-                >
-                  <div className="flex items-center space-x-4">
-                    <div className="text-center">
-                      <div className="text-lg font-bold">
-                        {formatDateParts(appointment.schedule.date).day}
-                      </div>
-                      <div className="text-sm text-muted-foreground">
-                        {formatDateParts(appointment.schedule.date).month}
-                      </div>
-                    </div>
-                    <div>
-                      <div className="font-medium">
-                        {appointment.purposes.includes('OTHERS')
-                          ? appointment.other_purpose.slice(0, 30)
-                          : formatPurposeText(appointment.purposes)}
-                      </div>
-                      <div className="text-sm text-muted-foreground">
-                        {formatTimeToAmPm(appointment.schedule.time)}
-                      </div>
-                      <div className="text-sm text-muted-foreground">
-                        Main Clinic
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Badge
-                      className="uppercase"
-                      variant={
-                        appointment.status === 'COMPLETED'
-                          ? 'default'
-                          : appointment.status === 'CANCELLED'
-                          ? 'destructive'
-                          : appointment.status === 'SUBMITTED'
-                          ? 'pending'
-                          : 'secondary'
-                      }
-                    >
-                      {appointment.status}
-                    </Badge>
-                    {['SUBMITTED', 'SCHEDULED', 'NO_SHOW'].includes(
-                      appointment.status
-                    ) && (
-                      <Button variant="outline" size="sm">
-                        Reschedule
-                      </Button>
-                    )}
-                    <Button variant="outline" size="sm">
-                      Cancel
-                    </Button>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Past Appointments</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {recentVisits.map((visit) => (
-              <div
-                key={visit.id}
-                className="flex items-center justify-between p-4 border rounded-lg border-muted"
-              >
-                <div className="flex items-center space-x-4">
-                  <CheckCircle className="h-5 w-5 text-green-500" />
-                  <div>
-                    <div className="font-medium">{visit.type}</div>
-                    <div className="text-sm text-muted-foreground">
-                      {visit.date} with {visit.provider}
-                    </div>
-                    <div className="text-sm text-muted-foreground">
-                      {visit.diagnosis}
-                    </div>
-                  </div>
-                </div>
-                <Button variant="outline" size="sm">
-                  <Eye className="h-4 w-4 mr-2" />
-                  View Details
-                </Button>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  )
-
   return (
     <Tabs value={tab} onValueChange={setTab} className="w-full">
       <div className="flex justify-between items-center mb-6">
@@ -248,7 +101,14 @@ export default function PatientAppointments() {
 
       {/* Tab content below */}
       <TabsContent value="all">
-        {loading ? <AppointmentListSkeleton /> : <AppointmentList />}
+        {isLoading ? (
+          <AppointmentListSkeleton />
+        ) : (
+          <PatientAppointmentList
+            appointments={appointmentsData?.data}
+            pagination={pagination}
+          />
+        )}
       </TabsContent>
 
       <TabsContent value="form">

@@ -46,7 +46,7 @@ const recordSoapNote = catchAsync(async (req, res) => {
 
   res.status(201).json({
     success: true,
-    message: 'SoapNotes recorded successfully',
+    message: 'Note recorded successfully',
     data: savedSoapNote,
   })
 })

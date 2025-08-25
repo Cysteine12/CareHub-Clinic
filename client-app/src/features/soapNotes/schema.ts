@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { recordVitalSchema } from '../vital/vital.validation.js'
+import { recordVitalSchema } from '../vitals/schema'
 
 const subjectiveSchema = z
   .object({

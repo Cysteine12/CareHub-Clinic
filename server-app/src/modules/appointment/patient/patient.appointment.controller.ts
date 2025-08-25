@@ -15,7 +15,7 @@ const getAppointments = catchAsync(async (req, res) => {
   const query = req.query
   const options = { page: Number(query.page), limit: Number(query.limit) }
 
-  const appointments = await appointmentService.findAppointments(
+  const [appointments, total] = await appointmentService.findAppointments(
     { patient_id: user.id },
     options
   )
@@ -23,6 +23,7 @@ const getAppointments = catchAsync(async (req, res) => {
   res.status(200).json({
     success: true,
     data: appointments,
+    total: total,
   })
 })
 
@@ -111,7 +112,11 @@ const rescheduleAppointment = catchAsync(async (req, res) => {
     { id, patient_id: user.id },
     {
       ...newAppointment,
-      status: AppointmentStatus.RESCHEDULED,
+      schedule: {
+        ...newAppointment.schedule,
+        change_count: appointment.schedule.change_count + 1,
+      },
+      status: AppointmentStatus.SUBMITTED,
     }
   )
 

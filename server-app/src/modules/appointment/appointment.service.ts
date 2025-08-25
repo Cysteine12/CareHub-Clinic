@@ -48,6 +48,7 @@ const findAppointment = async (
       appointment_providers: {
         include: { provider: { omit: { password: true } } },
       },
+      follow_up_appointment: true,
     },
   })
 }

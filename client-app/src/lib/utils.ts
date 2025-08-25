@@ -13,7 +13,7 @@ export const formatTextWithSize = (
   return text.length > length ? text.slice(0, length) + '...' : text
 }
 
-const formatDateIntl = (datetime: string) => {
+const formatDateIntl = (datetime: string | undefined) => {
   if (!datetime) return
 
   const newDate = new Date(datetime)
@@ -26,7 +26,7 @@ const formatDateIntl = (datetime: string) => {
   return f.format(newDate).substring(0, 10)
 }
 
-const formatDate = (datetime: string) => {
+const formatDate = (datetime: string | undefined) => {
   if (!datetime) return
 
   const newDate = new Date(datetime).toString()
@@ -34,7 +34,7 @@ const formatDate = (datetime: string) => {
   return newDate.substring(0, 10)
 }
 
-const formatTime = (datetime: string) => {
+const formatTime = (datetime: string | undefined) => {
   if (!datetime) return
 
   const newDate = new Date(datetime).toString()

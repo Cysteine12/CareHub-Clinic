@@ -1,4 +1,4 @@
-import { CheckCircle } from 'lucide-react'
+import { Calendar, CheckCircle } from 'lucide-react'
 import { Badge } from '../../../../components/ui/badge'
 import {
   Select,
@@ -46,7 +46,7 @@ const AppointmentStatusCard = ({
       case 'CHECKED_IN':
         return ['ATTENDED', 'ATTENDING', 'CANCELLED']
       case 'ATTENDING':
-        return ['ATTENDED', 'ATTENDING', 'CANCELLED']
+        return ['ATTENDED', 'ATTENDING']
       case 'ATTENDED':
         return ['ATTENDING', 'CONFIRMED']
       case 'CONFIRMED':
@@ -106,7 +106,8 @@ const AppointmentStatusCard = ({
                 )
               }
             >
-              Book {status === 'COMPLETED' ? 'Follow-up' : 'New'} Appointment
+              <Calendar className="w-3 h-3" />
+              {status === 'COMPLETED' ? 'Book Follow-up' : 'Reschedule'}
             </Button>
           )}
         </div>

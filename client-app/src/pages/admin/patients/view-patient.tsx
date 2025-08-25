@@ -26,6 +26,7 @@ import type { Patient } from '../../../features/patients/types'
 import { useAppointmentsByPatient } from '../../../features/appointments/hooks'
 import { formatDate } from '../../../lib/utils'
 import { formatPurposeText } from '../../../lib/type'
+import { getBadgeVariant } from '../../../features/appointments/util'
 
 const ViewPatient = () => {
   const { id } = useParams()
@@ -253,14 +254,14 @@ const ViewPatient = () => {
                     No records yet
                   </div>
                 )}
-                {appointments?.map((appointment, index) => (
+                {appointments?.map((appointment) => (
                   <Button
                     variant={'ghost'}
                     onClick={() =>
                       navigate(`/provider/appointments/${appointment?.id}`)
                     }
-                    key={index}
-                    className="flex items-center justify-between border rounded-lg text-wrap h-auto"
+                    key={appointment?.id}
+                    className="w-full flex items-center justify-between border rounded-lg text-wrap h-auto"
                   >
                     <div className="flex items-center space-x-3">
                       <div className="text-sm font-medium">
@@ -279,15 +280,7 @@ const ViewPatient = () => {
                         </div>
                       </div>
                     </div>
-                    <Badge
-                      variant={
-                        appointment?.status === 'SCHEDULED'
-                          ? 'default'
-                          : appointment?.status === 'CANCELLED'
-                          ? 'destructive'
-                          : 'secondary'
-                      }
-                    >
+                    <Badge variant={getBadgeVariant(appointment?.status)}>
                       {appointment?.status}
                     </Badge>
                   </Button>

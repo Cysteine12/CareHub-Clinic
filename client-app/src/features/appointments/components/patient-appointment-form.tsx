@@ -57,7 +57,6 @@ const PatientAppointmentForm = ({
   })
 
   const onSubmit = async (data: AppointmentFormData) => {
-    console.log('iran')
     setIsSubmitting(true)
     const endpoint = `/api/patient/appointments`
     const payload = { ...data, purposes: [watch('purposes')] }

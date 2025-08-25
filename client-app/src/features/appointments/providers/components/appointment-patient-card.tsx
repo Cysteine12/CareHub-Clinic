@@ -53,10 +53,10 @@ const AppointmentPatientCard = ({
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium">Address:</span>
-              <p className="text-sm text-muted-foreground flex ">
+              <div className="text-sm text-muted-foreground flex ">
                 <MapPin className="h-4 w-4 mr-1 mt-0.5" />
                 {patient?.address}
-              </p>
+              </div>
             </div>
           </div>
           <div className="space-y-4">
@@ -82,13 +82,13 @@ const AppointmentPatientCard = ({
             </div>
             <div className="flex justify-between items-center space-y-2">
               <span className="text-sm font-medium">Allergies:</span>
-              <p className="text-sm text-muted-foreground">
+              <div className="text-sm text-muted-foreground">
                 {patient?.allergies.map((allergy) => (
-                  <Badge variant={'destructive'} className="ml-1">
+                  <Badge key={allergy} variant={'destructive'} className="ml-1">
                     {allergy}
                   </Badge>
                 ))}
-              </p>
+              </div>
             </div>
           </div>
         </div>
