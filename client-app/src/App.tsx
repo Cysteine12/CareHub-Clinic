@@ -17,7 +17,9 @@ import PatientForgotPassword from './pages/patient/forgot-password-patient'
 import PatientSignIn from './pages/patient/patient-sign-in'
 import ProviderSignIn from './pages/provider/provider-sign-in'
 import { Toaster } from 'sonner'
-import PatientAppointments from './pages/patient/patient-appointment'
+import PatientAppointments from './pages/patient/appointments/all-appointments'
+import PatientViewAppointment from './pages/patient/appointments/view-appointment'
+import PatientEditAppointment from './pages/patient/appointments/edit-appointment'
 import PatientProfile from './pages/patient/patient-profile'
 import PatientFiles from './pages/patient/patient-files'
 import { ProviderLayout } from './layout/providerLayout'
@@ -110,6 +112,14 @@ function App() {
             <Route path="/files" element={<PatientFiles />} />
             <Route path="/billings" element={<Billings />} />
             <Route path="/appointments" element={<PatientAppointments />} />
+            <Route
+              path="/appointments/:id"
+              element={<PatientViewAppointment />}
+            />
+            <Route
+              path="/appointments/:id/edit"
+              element={<PatientEditAppointment />}
+            />
 
             <Route path="/settings" element={<Settings />} />
           </Route>

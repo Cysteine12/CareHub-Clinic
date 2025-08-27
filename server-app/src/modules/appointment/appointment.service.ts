@@ -82,7 +82,7 @@ const updateAppointment = async (
     payload.schedule.date = addMinutes(
       new Date(payload.schedule.date),
       parseInt(hours) * 60 + parseInt(minutes)
-    ).toDateString()
+    ).toISOString()
   }
   return await prisma.appointment.update({
     where: filter,

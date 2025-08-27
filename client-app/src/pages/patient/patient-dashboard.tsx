@@ -22,16 +22,13 @@ import { Badge } from '../../components/ui/badge'
 import GoogleModal from '../../components/auth/google-modal'
 import API from '../../lib/api'
 import { useEffect, useState } from 'react'
-import {
-  formatPurposeText,
-  formatTimeToAmPm,
-  type Appointment,
-  type SoapNote,
-  type Vitals,
-} from '../../lib/type'
+import { formatPurposeText, formatTimeToAmPm } from '../../lib/type'
 import { formatDate } from '../../lib/utils'
 import { useNavigate } from 'react-router-dom'
 import { Skeleton } from '../../components/ui/skeleton'
+import type { Appointment } from '../../features/appointments/types'
+import type { Vital } from '../../features/vitals/types'
+import type { SoapNote } from '../../features/soapNotes/types'
 
 const medications = [
   {
@@ -61,7 +58,7 @@ function PatientDashboard() {
   const [isLoading, setIsLoading] = useState(false)
   const [stats, setStats] = useState<{
     nextAppointment: Appointment
-    lastVitals: Vitals
+    lastVital: Vital
     lastSoapNote: SoapNote
     upcomingAppointments: Appointment[]
   } | null>(null)
@@ -221,17 +218,17 @@ function PatientDashboard() {
                   <Skeleton>
                     <div className="p-6 w-2" />
                   </Skeleton>
-                ) : stats?.lastVitals?.temperature != null ? (
-                  `${stats.lastVitals.temperature}°C`
+                ) : stats?.lastVital?.temperature ? (
+                  `${stats.lastVital.temperature}°C`
                 ) : (
                   'N/A'
                 )}
               </div>
               <p className="text-xs">
                 Last reading:{' '}
-                {stats?.lastVitals?.created_at
+                {stats?.lastVital?.created_at
                   ? formatDate(
-                      new Date(stats.lastVitals.created_at).toISOString()
+                      new Date(stats.lastVital.created_at).toISOString()
                     )
                   : 'N/A'}
               </p>
@@ -251,15 +248,20 @@ function PatientDashboard() {
                   <Skeleton>
                     <div className="p-6 w-2" />
                   </Skeleton>
+                ) : stats?.lastVital?.blood_pressure ? (
+                  <>
+                    <span>{stats.lastVital.blood_pressure}</span>
+                    <span className="text-sm font-normal">mmHg</span>
+                  </>
                 ) : (
-                  stats?.lastVitals?.blood_pressure || 'N/A'
+                  'N/A'
                 )}
               </div>
               <p className="text-xs">
                 Last reading:{' '}
-                {stats?.lastVitals?.created_at
+                {stats?.lastVital?.created_at
                   ? formatDate(
-                      new Date(stats.lastVitals.created_at).toISOString()
+                      new Date(stats.lastVital.created_at).toISOString()
                     )
                   : 'N/A'}
               </p>
@@ -277,11 +279,23 @@ function PatientDashboard() {
                   <Skeleton>
                     <div className="p-6 w-2" />
                   </Skeleton>
+                ) : stats?.lastVital?.heart_rate ? (
+                  <>
+                    <span>{stats.lastVital.heart_rate}</span>
+                    <span className="text-sm font-normal">bpm</span>
+                  </>
                 ) : (
-                  stats?.lastVitals?.heart_rate || 'N/A'
+                  'N/A'
                 )}
               </div>
-              <p className="text-xs">bpm</p>
+              <p className="text-xs">
+                Last reading:{' '}
+                {stats?.lastVital?.created_at
+                  ? formatDate(
+                      new Date(stats.lastVital.created_at).toISOString()
+                    )
+                  : 'N/A'}
+              </p>
             </CardContent>
           </Card>
         </div>

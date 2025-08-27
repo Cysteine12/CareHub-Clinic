@@ -15,6 +15,7 @@ import {
 import type { Appointment, IPagination } from '../types'
 import Pagination from '../../../components/ui/pagination'
 import { useCancelAppointment } from '../patients/hook'
+import { useNavigate } from 'react-router-dom'
 
 const recentVisits = [
   {
@@ -44,6 +45,7 @@ export const PatientAppointmentList = ({
   appointments,
   pagination,
 }: PatientAppointmentListProps) => {
+  const navigate = useNavigate()
   const { mutate: cancelAppointment } = useCancelAppointment()
 
   return (
@@ -106,15 +108,27 @@ export const PatientAppointmentList = ({
                           : 'secondary'
                       }
                     >
-                      {appointment.status}
+                      {appointment.status.replace('_', ' ')}
                     </Badge>
                     {['SUBMITTED'].includes(appointment.status) && (
-                      <Button onClick={() => {}} variant="outline" size="xs">
+                      <Button
+                        onClick={() =>
+                          navigate(`/appointments/${appointment.id}/edit`)
+                        }
+                        variant="default"
+                        size="xs"
+                      >
                         Edit
                       </Button>
                     )}
                     {['SCHEDULED', 'NO_SHOW'].includes(appointment.status) && (
-                      <Button onClick={() => {}} variant="outline" size="xs">
+                      <Button
+                        onClick={() =>
+                          navigate(`/appointments/${appointment.id}/edit`)
+                        }
+                        variant="default"
+                        size="xs"
+                      >
                         Reschedule
                       </Button>
                     )}
@@ -131,17 +145,36 @@ export const PatientAppointmentList = ({
                         Cancel
                       </Button>
                     )}
+                    {![
+                      'SUBMITTED',
+                      'SCHEDULED',
+                      'NO_SHOW',
+                      'CANCELLED',
+                    ].includes(appointment.status) && (
+                      <Button
+                        onClick={() =>
+                          navigate(`/appointments/${appointment.id}`)
+                        }
+                        variant="default"
+                        size="xs"
+                      >
+                        <Eye />
+                        View
+                      </Button>
+                    )}
                   </div>
                 </div>
               ))
             )}
-            {pagination.total > 0 && (
-              <Pagination
-                currentPage={pagination.page}
-                perPage={pagination.limit}
-                total={pagination.total}
-              />
-            )}
+            <div className="flex justify-center">
+              {pagination.total > 0 && (
+                <Pagination
+                  currentPage={pagination.page}
+                  perPage={pagination.limit}
+                  total={pagination.total}
+                />
+              )}
+            </div>
           </div>
         </CardContent>
       </Card>

@@ -14,6 +14,7 @@ import type {
 import type { AxiosError } from 'axios'
 import type { APIResponse, IPagination } from '../types'
 import { toast } from 'sonner'
+import { useNavigate } from 'react-router-dom'
 
 const useAppointments = (query: IPagination) => {
   return useQuery({
@@ -47,6 +48,7 @@ const useCreateAppointment = () => {
 }
 
 const useUpdateAppointment = () => {
+  const navigate = useNavigate()
   const queryClient = useQueryClient()
   type UpdateAppointmentMutation = {
     id: string
@@ -61,6 +63,7 @@ const useUpdateAppointment = () => {
       queryClient.invalidateQueries({
         queryKey: ['appointments'],
       })
+      navigate('/appointments')
     },
     onError: (data: AxiosError<APIResponse>) => {
       toast.error(data.response?.data?.message)
@@ -69,6 +72,7 @@ const useUpdateAppointment = () => {
 }
 
 const useRescheduleAppointment = () => {
+  const navigate = useNavigate()
   const queryClient = useQueryClient()
   type UpdateAppointmentStatusMutation = {
     id: string
@@ -83,6 +87,7 @@ const useRescheduleAppointment = () => {
       queryClient.invalidateQueries({
         queryKey: ['appointments'],
       })
+      navigate('/appointments')
     },
     onError: (data: AxiosError<APIResponse>) => {
       toast.error(data.response?.data?.message)

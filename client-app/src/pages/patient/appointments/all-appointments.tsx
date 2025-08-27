@@ -1,21 +1,21 @@
 import { Search, ArrowLeft, AlertCircle } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { Button } from '../../components/ui/button'
-import { Card, CardContent, CardHeader } from '../../components/ui/card'
+import { Button } from '../../../components/ui/button'
+import { Card, CardContent, CardHeader } from '../../../components/ui/card'
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
-} from '../../components/ui/tabs'
-import { Skeleton } from '../../components/ui/skeleton'
-import { Alert } from '../../components/ui/alert'
+} from '../../../components/ui/tabs'
+import { Skeleton } from '../../../components/ui/skeleton'
+import { Alert } from '../../../components/ui/alert'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import PatientAppointmentForm from '../../features/appointments/components/patient-appointment-form'
-import { useAppointments } from '../../features/appointments/patients/hook'
-import { PatientAppointmentList } from '../../features/appointments/components/patient-appointment-list'
+import PatientAppointmentForm from '../../../features/appointments/components/patient-appointment-form'
+import { useAppointments } from '../../../features/appointments/patients/hook'
+import { PatientAppointmentList } from '../../../features/appointments/components/patient-appointment-list'
 
-export default function PatientAppointments() {
+export default function AllAppointments() {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
   const [tab, setTab] = useState('all')
