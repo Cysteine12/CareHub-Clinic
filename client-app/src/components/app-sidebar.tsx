@@ -56,27 +56,35 @@ export function AppSidebar() {
     { title: 'Appointments', url: '/appointments', icon: Calendar },
     { title: 'Patients', url: '/patients', icon: Users },
     { title: 'Providers', url: '/list', icon: BarChart3 },
-    { title: 'Mobile Outreach', url: '/outreach', icon: Smartphone },
     { title: 'Insurance Check', url: '/insurance', icon: CreditCard },
     { title: 'Reminders', url: '/reminders', icon: Bell },
+    { title: 'Records', url: '/files', icon: FileArchive },
+    { title: 'Mobile Outreach', url: '/outreach', icon: Smartphone },
   ]
 
   const fullAccessRoles = ['ADMIN', 'RECEPTIONIST']
   const limitedAccessRoles = [
-    'LAB TECHNICIAN',
+    'LAB_TECHNICIAN',
     'PHARMACIST',
     'NURSE',
     'GYNEACOLOGIST',
     'PAEDIATRICIAN',
+    'GENERAL_PRACTIONER',
+    'GENERAL_PRACTITIONER',
   ]
 
   let menuItems
 
-  if (fullAccessRoles.includes(user?.role_title || '')) {
+  if (user?.role_title && fullAccessRoles.includes(user?.role_title)) {
     menuItems = providerMenuItems
-  } else if (limitedAccessRoles.includes(user?.role_title || '')) {
+  } else if (
+    user?.role_title &&
+    limitedAccessRoles.includes(user?.role_title)
+  ) {
     menuItems = providerMenuItems.filter((item) =>
-      ['Dashboard', 'Appointments', 'Insurance Check'].includes(item.title)
+      ['Dashboard', 'Appointments', 'Records', 'Mobile Outreach'].includes(
+        item.title
+      )
     )
   } else {
     menuItems = patientMenuItems
@@ -94,7 +102,9 @@ export function AppSidebar() {
               {userType ? 'Provider Portal' : 'Patient Portal'}
             </p>
             {user?.role_title && (
-              <Badge variant={'outline'}>{user?.role_title}</Badge>
+              <Badge variant={'outline'}>
+                {user?.role_title.replace('_', ' ')}
+              </Badge>
             )}
           </div>
         </div>

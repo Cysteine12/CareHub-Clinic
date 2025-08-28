@@ -413,7 +413,7 @@ export default function ProviderDashboard() {
               <div className="hidden md:block">
                 <div className="text-sm font-medium">{user?.first_name}</div>
                 <div className="text-xs text-muted-foreground">
-                  {currentStaff.role_title}
+                  {currentStaff.role_title.replace('_', ' ')}
                 </div>
               </div>
             </div>

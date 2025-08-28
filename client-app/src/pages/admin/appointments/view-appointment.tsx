@@ -225,9 +225,7 @@ const AppointmentDetail = () => {
                     </CardDescription>
                   </div>
                   {appointment &&
-                    ['CHECKED_IN', 'ATTENDING', 'ATTENDED'].includes(
-                      appointment.status
-                    ) && (
+                    ['ATTENDING', 'ATTENDED'].includes(appointment.status) && (
                       <VitalsFormDialog
                         appointmentId={appointment.id}
                         appointmentVital={appointment.vital}
@@ -255,9 +253,7 @@ const AppointmentDetail = () => {
                     </CardDescription>
                   </div>
                   {appointment &&
-                    ['CHECKED_IN', 'ATTENDING', 'ATTENDED'].includes(
-                      appointment.status
-                    ) && (
+                    ['ATTENDING', 'ATTENDED'].includes(appointment.status) && (
                       <SoapNoteFormDialog
                         appointmentId={appointment.id}
                         appointmentVital={appointment.vital}

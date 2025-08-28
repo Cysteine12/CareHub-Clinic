@@ -58,7 +58,7 @@ export default function VitalFormDialog({
     const weight = Number.parseFloat(vital.weight)
     const height = Number.parseFloat(vital.height)
 
-    const heightInMeters = height * 0.0254
+    const heightInMeters = height * 0.3048
     const bmi = weight / (heightInMeters * heightInMeters)
     setVital((prev: RecordVitalSchema) => ({ ...prev, bmi: bmi.toFixed(1) }))
     return bmi.toFixed(1)
