@@ -13,7 +13,7 @@ const startServer = async () => {
 
     startCronJob()
 
-    app.listen(PORT, "::", () => {
+    app.listen(PORT, '::', () => {
       logger.info(`Server is running on port ${PORT}`)
     })
   } catch (err) {
@@ -23,3 +23,10 @@ const startServer = async () => {
 }
 
 startServer()
+
+process.on('SIGTERM', async () => {
+  logger.info('SIGINT recieved. Closing DB connection...')
+
+  await prisma.$disconnect()
+  process.exit(0)
+})

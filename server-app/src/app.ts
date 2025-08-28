@@ -70,6 +70,10 @@ app.use(
   })
 )
 
+app.get('/', (req, res) =>
+  res.json({ message: `Welcome to ${config.APP_NAME}` })
+)
+
 app.use('/api/auth/patient', patientAuthRoute)
 app.use('/api/auth/provider', providerAuthRoute)
 app.use('/api/auth/google', googleAuthRoute)
