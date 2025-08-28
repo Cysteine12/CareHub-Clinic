@@ -21,7 +21,7 @@ export type CreatePatientAppointmentSchema = z.infer<
   typeof createPatientAppointmentSchema
 >
 
-const updatePatientAppointmentSchema = createPatientAppointmentSchema.optional()
+const updatePatientAppointmentSchema = createPatientAppointmentSchema
 
 export type UpdatePatientAppointmentSchema = z.infer<
   typeof updatePatientAppointmentSchema

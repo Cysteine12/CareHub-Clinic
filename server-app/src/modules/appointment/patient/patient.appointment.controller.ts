@@ -6,6 +6,7 @@ import {
 import catchAsync from '../../../utils/catchAsync.js'
 import appointmentService from '../appointment.service.js'
 import type {
+  AppointmentScheduleSchema,
   CreatePatientAppointmentSchema,
   UpdatePatientAppointmentSchema,
 } from '../appointment.validation.js'
@@ -114,7 +115,9 @@ const rescheduleAppointment = catchAsync(async (req, res) => {
       ...newAppointment,
       schedule: {
         ...newAppointment.schedule,
-        change_count: appointment.schedule.change_count + 1,
+        change_count:
+          ((appointment.schedule as AppointmentScheduleSchema).change_count ||
+            0) + 1,
       },
       status: AppointmentStatus.SUBMITTED,
     }
