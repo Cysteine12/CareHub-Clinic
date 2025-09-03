@@ -24,7 +24,7 @@ export default function AllAppointments() {
     limit: 20,
     total: 0,
   })
-  const { data: appointmentsData, isLoading } = useAppointments(pagination)
+  const { data: appointmentsData, isLoading, refetch } = useAppointments(pagination)
 
   useEffect(() => {
     if (searchParams.get('tab')) {
@@ -113,7 +113,10 @@ export default function AllAppointments() {
 
       <TabsContent value="form">
         <Card className="max-w-4xl mx-auto">
-          <PatientAppointmentForm onCompleteSubmit={() => setTab('all')} />
+          <PatientAppointmentForm onCompleteSubmit={() => {
+            refetch()
+            setTab('all')
+          }} />
         </Card>
         <Alert
           variant="destructive"

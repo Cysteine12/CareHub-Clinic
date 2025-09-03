@@ -30,6 +30,7 @@ const findAppointments = async (
       skip: options?.skip || 0,
       take: options?.limit || 20,
       include: { patient: { omit: { password: true } } },
+      orderBy: { updated_at: 'desc' },
     }),
     prisma.appointment.count({ where: filter }),
   ])
