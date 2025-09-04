@@ -12,7 +12,7 @@ const subjectiveSchema = z
 const objectiveSchema = z
   .object({
     physical_exam_report: z.array(z.string()).optional(),
-    vitals_summary: recordVitalSchema.optional(),
+    vitals_summary: recordVitalSchema.nullable(),
     labs: z.string().optional(),
     others: z.string(),
   })
