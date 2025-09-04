@@ -23,7 +23,7 @@ import type {
   Appointment,
   AppointmentProvider,
 } from '../../../features/appointments/types'
-import { formatTimeToAmPm } from '../../../lib/type'
+import { formatTimeToAmPm, type Event } from '../../../lib/type'
 import type { Patient } from '../../../features/patients/types'
 import type { Provider } from '../../../features/providers/types'
 import AppointmentStatusCard from '../../../features/appointments/providers/components/appointment-status-card'
@@ -52,9 +52,14 @@ const AppointmentDetail = () => {
         soap_notes: SoapNote[]
         appointment_providers: (AppointmentProvider & { provider: Provider })[]
         patient: Patient
+        events: Event[]
       })
     | null
   >(null)
+
+  const appointmentProviderStatus = appointment?.appointment_providers?.find(
+    (appointment_provider) => appointment_provider?.provider_id === user?.id
+  )?.status
 
   useEffect(() => {
     if (appointmentData?.data) {
@@ -140,6 +145,7 @@ const AppointmentDetail = () => {
           appointmentId={appointment.id}
           appointmentStatus={appointment.status}
           appointmentPatientId={appointment.patient.id}
+          providerStatus={appointmentProviderStatus}
         />
       )}
 
@@ -225,7 +231,10 @@ const AppointmentDetail = () => {
                     </CardDescription>
                   </div>
                   {appointment &&
-                    ['ATTENDING', 'ATTENDED'].includes(appointment.status) && (
+                    appointmentProviderStatus &&
+                    ['ATTENDING', 'ATTENDED'].includes(
+                      appointmentProviderStatus
+                    ) && (
                       <VitalsFormDialog
                         appointmentId={appointment.id}
                         appointmentVital={appointment.vital}
@@ -253,7 +262,10 @@ const AppointmentDetail = () => {
                     </CardDescription>
                   </div>
                   {appointment &&
-                    ['ATTENDING', 'ATTENDED'].includes(appointment.status) && (
+                    appointmentProviderStatus &&
+                    ['ATTENDING', 'ATTENDED'].includes(
+                      appointmentProviderStatus
+                    ) && (
                       <SoapNoteFormDialog
                         appointmentId={appointment.id}
                         appointmentVital={appointment.vital}

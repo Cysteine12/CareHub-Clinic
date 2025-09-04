@@ -3,6 +3,7 @@ import type {
   AssignProviderSchema,
   CreateProviderAppointmentSchema,
   FollowUpAppointmentSchema,
+  UpdateAppointmentProviderStatusSchema,
   UpdateAppointmentStatusSchema,
   UpdateProviderAppointmentSchema,
 } from '../schema'
@@ -95,6 +96,17 @@ const assignAppointmentProvider = async (
   return data
 }
 
+const updateAppointmentProviderStatus = async (
+  id: string,
+  payload: UpdateAppointmentProviderStatusSchema
+) => {
+  const { data } = await API.patch(
+    `/api/provider/appointments/${id}/provider/status`,
+    payload
+  )
+  return data
+}
+
 const followUpAppointment = async (
   id: string,
   payload: FollowUpAppointmentSchema
@@ -123,5 +135,6 @@ export {
   updateAppointmentStatus,
   followUpAppointment,
   assignAppointmentProvider,
+  updateAppointmentProviderStatus,
   deleteAppointment,
 }

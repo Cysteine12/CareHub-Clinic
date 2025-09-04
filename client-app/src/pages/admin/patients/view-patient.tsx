@@ -23,16 +23,20 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import ProfilePhoto from '../../../components/profile-photo'
 import { usePatient } from '../../../features/patients/hook'
 import type { Patient } from '../../../features/patients/types'
-import { useAppointmentsByPatient } from '../../../features/appointments/hooks'
 import { formatDate } from '../../../lib/utils'
 import { formatPurposeText } from '../../../lib/type'
 import { getBadgeVariant } from '../../../features/appointments/util'
+import { useAppointmentsByPatient } from '../../../features/appointments/providers/hook'
+import type { Appointment } from '../../../features/appointments/types'
 
 const ViewPatient = () => {
   const { id } = useParams()
   const navigate = useNavigate()
   const { data: patientData, isLoading } = usePatient(id)
-  const { appointments } = useAppointmentsByPatient(id, { page: 1, limit: 3 })
+  const { data: appointmentsData } = useAppointmentsByPatient(id, {
+    page: 1,
+    limit: 3,
+  })
 
   const patient: Patient = patientData?.data
 
@@ -249,12 +253,12 @@ const ViewPatient = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {appointments.length < 1 && (
+                {appointmentsData?.data?.length < 1 && (
                   <div className="text-center text-sm text-muted-foreground">
                     No records yet
                   </div>
                 )}
-                {appointments?.map((appointment) => (
+                {appointmentsData?.data?.map((appointment: Appointment) => (
                   <Button
                     variant={'ghost'}
                     onClick={() =>

@@ -170,8 +170,6 @@ enum AppointmentStatus {
   CHECKED_IN    @map("CHECKED IN")
   CANCELLED
   RESCHEDULED
-  ATTENDING
-  ATTENDED
   NO_SHOW       @map("NO SHOW")
   COMPLETED
   CONFIRMED
@@ -181,6 +179,7 @@ model AppointmentProvider {
   id              String      @id @default(uuid())
   appointment_id  String
   provider_id     String
+  status          AppointmentProviderStatus   @default(ASSIGNED)
   created_at      DateTime    @default(now())
   updated_at      DateTime    @updatedAt
 
@@ -191,6 +190,12 @@ model AppointmentProvider {
 
   @@unique([appointment_id, provider_id])
   @@map("appointment_providers")
+}
+
+enum AppointmentProviderStatus {
+  ASSIGNED
+  ATTENDING
+  ATTENDED
 }
 
 model SoapNote {
@@ -265,6 +270,7 @@ enum EventType {
   SOAP_NOTE_UPDATED             @map("SOAP NOTE UPDATED")
   PROVIDER_ASSIGNED             @map("PROVIDER ASSIGNED")
   APPOINTMENT_STATUS_CHANGED    @map("APPOINTMENT STATUS CHANGED")
+  PROVIDER_STATUS_CHANGED       @map("PROVIDER STATUS CHANGED")
 }
 
 model InsuranceProvider {

@@ -19,18 +19,16 @@ import {
 } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useEffect, useState } from 'react'
-import {
-  formatPurposeText,
-  formatTimeToAmPm,
-  type Appointment,
-} from '../../lib/type'
+import { formatPurposeText, formatTimeToAmPm } from '../../lib/type'
 import API from '../../lib/api'
 import { getBadgeVariant } from '../../features/appointments/util'
+import type { Appointment } from '../../features/appointments/types'
+import type { Patient } from '../../features/patients/types'
 
 export default function AdminDashboard() {
   const navigate = useNavigate()
   const [stats, setStats] = useState<{
-    todayAppointments: Appointment[]
+    todayAppointments: (Appointment & { patient: Patient })[]
     totalActivePatientsInLastMonth: number
     waitTimeRate: number
     noShowRate: number

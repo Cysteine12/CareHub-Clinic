@@ -7,48 +7,87 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../../../../components/ui/select'
-import type { AppointmentStatus } from '../../types'
-import { useUpdateAppointmentStatus } from '../hook'
+import type { AppointmentProviderStatus, AppointmentStatus } from '../../types'
+import {
+  useUpdateAppointmentProviderStatus,
+  useUpdateAppointmentStatus,
+} from '../hook'
 import { useEffect, useState } from 'react'
 import { Button } from '../../../../components/ui/button'
 import { useNavigate } from 'react-router-dom'
 import { getBadgeVariant } from '../../util'
+import { useAuthStore } from '../../../../store/auth-store'
 
 type AppointmentStatusCardProps = {
   appointmentId: string
   appointmentStatus: AppointmentStatus
   appointmentPatientId: string
+  providerStatus: AppointmentProviderStatus | undefined
 }
 
 const AppointmentStatusCard = ({
   appointmentId,
   appointmentStatus,
   appointmentPatientId,
+  providerStatus,
 }: AppointmentStatusCardProps) => {
   const navigate = useNavigate()
-  const [status, setStatus] = useState<AppointmentStatus | null>(null)
-  const { mutate: updateAppointmentStatus } = useUpdateAppointmentStatus()
+  const { user } = useAuthStore()
+  const [status, setStatus] = useState<
+    AppointmentStatus | AppointmentProviderStatus | null
+  >(null)
+  const { mutate: updateAppointmentStatus, isPending } =
+    useUpdateAppointmentStatus()
+  const { mutate: updateAppointmentProviderStatus, isPending: isPending2 } =
+    useUpdateAppointmentProviderStatus()
 
   const handleUpdateStatus = async (newStatus: AppointmentStatus) => {
-    updateAppointmentStatus({
-      id: appointmentId,
-      payload: { status: newStatus },
-    })
-    setStatus(newStatus)
+    if (
+      user?.role_title &&
+      ['ADMIN', 'RECEPTIONIST'].includes(user.role_title)
+    ) {
+      updateAppointmentStatus({
+        id: appointmentId,
+        payload: { status: newStatus as AppointmentStatus },
+      })
+      setStatus(newStatus)
+    } else {
+      updateAppointmentProviderStatus({
+        id: appointmentId,
+        payload: { status: newStatus as AppointmentProviderStatus },
+      })
+    }
   }
 
-  const filteredStatusList = (): AppointmentStatus[] => {
+  const filteredStatusList = (): (
+    | AppointmentStatus
+    | AppointmentProviderStatus
+  )[] => {
+    // Status list for non admin/receptionst providers
+    if (
+      user?.role_title &&
+      !['ADMIN', 'RECEPTIONIST'].includes(user.role_title)
+    ) {
+      switch (providerStatus) {
+        case 'ASSIGNED':
+          return ['ATTENDING']
+        case 'ATTENDING':
+          return ['ATTENDED']
+        case 'ATTENDED':
+          return ['ATTENDING']
+        default:
+          return []
+      }
+    }
+
+    // Status list for admin & receptionst providers
     switch (status) {
       case 'SUBMITTED':
         return ['SCHEDULED', 'CANCELLED']
       case 'SCHEDULED':
         return ['CHECKED_IN', 'NO_SHOW', 'CANCELLED']
       case 'CHECKED_IN':
-        return ['ATTENDED', 'ATTENDING', 'CANCELLED']
-      case 'ATTENDING':
-        return ['ATTENDED', 'ATTENDING']
-      case 'ATTENDED':
-        return ['ATTENDING', 'CONFIRMED']
+        return ['CONFIRMED', 'CANCELLED']
       case 'CONFIRMED':
         return ['COMPLETED']
       default:
@@ -73,9 +112,7 @@ const AppointmentStatusCard = ({
           >
             {status?.replace('_', ' ')}
           </Badge>
-          {['CHECKED_IN', 'ATTENDING', 'ATTENDED'].includes(
-            appointmentStatus
-          ) && (
+          {appointmentStatus === 'CHECKED_IN' && (
             <div className="flex items-center text-sm text-green-600">
               <CheckCircle className="h-4 w-4 mr-1" />
               Currently in clinic
@@ -84,11 +121,23 @@ const AppointmentStatusCard = ({
         </div>
         <div className="flex items-center space-x-2">
           {filteredStatusList().length > 0 ? (
-            <Select onValueChange={handleUpdateStatus}>
+            <Select
+              onValueChange={(val) => {
+                if (val !== 'placeholder')
+                  handleUpdateStatus(val as AppointmentStatus)
+              }}
+              value="placeholder"
+              disabled={isPending || isPending2}
+            >
               <SelectTrigger className="w-[150px]">
                 <SelectValue placeholder="Update Status" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value={'placeholder'} disabled>
+                  {isPending || isPending2
+                    ? 'Updating status'
+                    : 'Update Status'}
+                </SelectItem>
                 {filteredStatusList().map((status) => (
                   <SelectItem key={status} value={status}>
                     {status.replace('_', ' ')}

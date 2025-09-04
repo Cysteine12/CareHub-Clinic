@@ -187,12 +187,7 @@ function PatientDashboard() {
               ) : stats?.nextAppointment ? (
                 <>
                   <div className="text-2xl font-bold">
-                    {formatDate(
-                      `${stats?.nextAppointment.schedule.date.substring(
-                        0,
-                        10
-                      )}T${stats?.nextAppointment?.schedule?.time}:00.000Z`
-                    )}
+                    {formatDate(stats?.nextAppointment.schedule.date)}
                   </div>
                   <p className="text-xs">
                     {formatTimeToAmPm(stats?.nextAppointment?.schedule?.time)}

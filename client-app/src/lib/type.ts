@@ -7,41 +7,6 @@ export type Patient = {
   insurance_provider_id?: string
 }
 
-export type AppointmentProvider = {
-  appointment_id?: string
-  provider_id?: string
-  provider: Provider
-}
-
-export type Appointment = {
-  id: string
-  patient: Patient
-  purposes: string[]
-  other_purpose: string
-  status:
-    | 'SUBMITTED'
-    | 'CONFIRMED'
-    | 'CANCELLED'
-    | 'COMPLETED'
-    | 'SCHEDULED'
-    | 'ATTENDING'
-  has_insurance: boolean
-  is_follow_up_required: boolean
-  follow_up_id: string | null
-  schedule: {
-    schedule_count: number
-    date: string
-    time: string
-  }
-  vitals: object
-  created_at: string
-  updated_at: string
-  appointment_providers: AppointmentProvider[]
-  phone?: string | null
-  email?: string | null
-  notes?: string | null
-}
-
 export type Provider = {
   id: string
   email: string
@@ -51,31 +16,6 @@ export type Provider = {
   role_title: string
   created_at: string // ISO date string
   updated_at: string // ISO date string
-}
-
-export type Vitals = {
-  id: string
-  created_at: Date
-  updated_at: Date | null
-  appointment_id: string
-  blood_pressure: string | null
-  heart_rate: string | null
-  temperature: string | null
-  height: string | null
-  weight: string | null
-  created_by_id: string | null
-}
-
-export type SoapNote = {
-  id: string
-  created_at: Date
-  updated_at: Date | null
-  appointment_id: string
-  created_by_id: string | null
-  subjective: object | null
-  objective: object | null
-  assessment: object | null
-  plan: object | null
 }
 
 export const formatPurposeText = (purposes: string[] | undefined): string => {
@@ -119,10 +59,23 @@ export const providerRoles = new Set([
   'GYNAECOLOGIST',
 ])
 
-export type AppointmentStatus =
-  | 'SUBMITTED'
-  | 'CONFIRMED'
-  | 'CANCELLED'
-  | 'COMPLETED'
-  | 'SCHEDULED'
-  | 'ATTENDING'
+export type EventType =
+  | 'VITALS_RECORDED'
+  | 'VITALS_UPDATED'
+  | 'SOAP_NOTE_RECORDED'
+  | 'SOAP_NOTE_UPDATED'
+  | 'PROVIDER_ASSIGNED'
+  | 'APPOINTMENT_STATUS_CHANGED'
+
+export type Event = {
+  id: string
+  status: string | null
+  created_at: Date
+  updated_at: Date
+  type: EventType
+  appointment_id: string
+  created_by_id: string | null
+  appointment_provider_id: string | null
+  vital_id: string | null
+  soap_note_id: string | null
+}

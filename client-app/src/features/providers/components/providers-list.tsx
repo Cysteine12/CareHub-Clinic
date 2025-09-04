@@ -14,10 +14,10 @@ import {
 import { Button } from '../../../components/ui/button'
 import { Calendar, Edit, Mail, Phone } from 'lucide-react'
 import { Avatar, AvatarFallback } from '../../../components/ui/avatar'
-import type { Appointment } from '../../../lib/type'
 import { formatDate, formatTextWithSize } from '../../../lib/utils'
 import { Badge } from '../../../components/ui/badge'
 import { useProviders, useSearchProvidersByName } from '../hook'
+import type { Appointment } from '../../appointments/types'
 
 interface Props {
   searchValue: string

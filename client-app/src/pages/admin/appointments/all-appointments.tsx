@@ -7,7 +7,6 @@ import {
   TabsList,
   TabsTrigger,
 } from '../../../components/ui/tabs'
-import { type Appointment } from '../../../lib/type'
 import AppointmentList from '../../../components/appointment-list'
 import { Search } from 'lucide-react'
 import { useSearchParams } from 'react-router-dom'
@@ -21,6 +20,8 @@ import {
 } from '../../../components/ui/card'
 import Pagination from '../../../components/ui/pagination'
 import { useAppointmentsBySchedule } from '../../../features/appointments/providers/hook'
+import type { Appointment } from '../../../features/appointments/types'
+import type { Patient } from '../../../features/patients/types'
 
 export default function Appointments() {
   const [searchValue, setSearchValue] = useState('')
@@ -31,7 +32,7 @@ export default function Appointments() {
     total: 0,
   })
   const [filteredAppointments, setFilteredAppointments] =
-    useState<Appointment[]>()
+    useState<(Appointment & { patient: Patient })[]>()
   const { data: todayAppointmentsData } = useAppointmentsBySchedule('today', {
     page: 1,
     limit: 200,

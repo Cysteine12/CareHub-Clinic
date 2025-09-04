@@ -5,11 +5,12 @@ import {
   CardHeader,
   CardTitle,
 } from '../components/ui/card'
-import type { Appointment } from '../lib/type'
+import type { Appointment } from '../features/appointments/types'
+import type { Patient } from '../features/patients/types'
 import AppointmentCard from './appointment-card'
 
 type AppointmentListProps = {
-  appointments: Appointment[] | null | undefined
+  appointments: (Appointment & { patient: Patient })[] | null | undefined
   title: string
 }
 

@@ -138,9 +138,7 @@ const PatientViewAppointment = () => {
               >
                 {appointment.status?.replace('_', ' ')}
               </Badge>
-              {['CHECKED_IN', 'ATTENDING', 'ATTENDED'].includes(
-                appointment.status
-              ) && (
+              {appointment.status === 'CHECKED_IN' && (
                 <div className="flex items-center text-sm text-green-600">
                   <CheckCircle className="h-4 w-4 mr-1" />
                   Currently in clinic

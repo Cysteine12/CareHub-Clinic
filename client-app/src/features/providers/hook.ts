@@ -12,11 +12,17 @@ import { useNavigate } from 'react-router'
 import type { AxiosError } from 'axios'
 import type { APIResponse, IPagination } from './types'
 import { toast } from 'sonner'
+import { useAuthStore } from '../../store/auth-store'
 
 const useProviders = (query: IPagination) => {
+  const { user } = useAuthStore()
+
   return useQuery({
     queryFn: () => getAllProviders(query),
     queryKey: ['providers', query.page],
+    enabled: !!(
+      user?.role_title && ['ADMIN', 'RECEPTIONIST'].includes(user.role_title)
+    ),
   })
 }
 

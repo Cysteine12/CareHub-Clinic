@@ -8,6 +8,8 @@ export type AppointmentProviderFindManyArgs =
   Prisma.AppointmentProviderFindManyArgs
 export type AppointmentProviderUncheckedCreateInput =
   Prisma.AppointmentProviderUncheckedCreateInput
+export type AppointmentProviderUncheckedUpdateInput =
+  Prisma.AppointmentProviderUncheckedUpdateInput
 
 const findAppointmentProviders = async (
   filter: AppointmentProviderWhereInput,
@@ -57,8 +59,19 @@ const createAppointmentProvider = async (
   return await prisma.appointmentProvider.create({ data: payload })
 }
 
+const updateAppointmentProvider = async (
+  filter: AppointmentProviderWhereUniqueInput,
+  payload: AppointmentProviderUncheckedUpdateInput
+): Promise<AppointmentProvider> => {
+  return await prisma.appointmentProvider.update({
+    where: filter,
+    data: payload,
+  })
+}
+
 export default {
   findAppointmentProviders,
   findAppointmentProvider,
   createAppointmentProvider,
+  updateAppointmentProvider,
 }

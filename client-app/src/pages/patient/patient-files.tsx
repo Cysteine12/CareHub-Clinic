@@ -15,9 +15,10 @@ import {
   CardTitle,
 } from '../../components/ui/card'
 import { Badge } from '../../components/ui/badge'
-import type { SoapNote, Vitals } from '../../lib/type'
 import { useEffect, useState } from 'react'
 import API from '../../lib/api'
+import type { Vital } from '../../features/vitals/types'
+import type { SoapNote } from '../../features/soapNotes/types'
 
 const labResults = [
   {
@@ -43,7 +44,7 @@ const PatientFiles = () => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [_isLoading, setIsLoading] = useState(false)
   const [stats, setStats] = useState<{
-    lastVitals: Vitals
+    lastVitals: Vital
     lastSoapNote: SoapNote
   } | null>(null)
 
@@ -102,57 +103,61 @@ const PatientFiles = () => {
             <CardTitle>Vital Signs</CardTitle>
             <CardDescription>Latest measurements</CardDescription>
           </CardHeader>
-          {stats?.lastVitals && <CardContent className="space-y-4">
-            <div className="flex justify-between items-center p-3 border rounded-lg border-muted">
-              <div className="flex items-center space-x-3">
-                <Heart className="h-5 w-5 text-red-500" />
-                <div>
-                  <div className="font-medium">Blood Pressure</div>
-                  <div className="text-sm text-muted-foreground">
-                    {formattedDate}
+          {stats?.lastVitals && (
+            <CardContent className="space-y-4">
+              <div className="flex justify-between items-center p-3 border rounded-lg border-muted">
+                <div className="flex items-center space-x-3">
+                  <Heart className="h-5 w-5 text-red-500" />
+                  <div>
+                    <div className="font-medium">Blood Pressure</div>
+                    <div className="text-sm text-muted-foreground">
+                      {formattedDate}
+                    </div>
                   </div>
                 </div>
-              </div>
-              <div className="text-right">
-                <div className="font-bold">
-                  {stats?.lastVitals.blood_pressure}
+                <div className="text-right">
+                  <div className="font-bold">
+                    {stats?.lastVitals.blood_pressure}
+                  </div>
+                  <div className="text-sm text-muted-foreground">mmHg</div>
                 </div>
-                <div className="text-sm text-muted-foreground">mmHg</div>
               </div>
-            </div>
 
-            <div className="flex justify-between items-center p-3 border border-muted rounded-lg">
-              <div className="flex items-center space-x-3">
-                <Activity className="h-5 w-5 text-blue-500" />
-                <div>
-                  <div className="font-medium">Heart Rate</div>
-                  <div className="text-sm text-muted-foreground">
-                    {formattedDate}
+              <div className="flex justify-between items-center p-3 border border-muted rounded-lg">
+                <div className="flex items-center space-x-3">
+                  <Activity className="h-5 w-5 text-blue-500" />
+                  <div>
+                    <div className="font-medium">Heart Rate</div>
+                    <div className="text-sm text-muted-foreground">
+                      {formattedDate}
+                    </div>
                   </div>
                 </div>
+                <div className="text-right">
+                  <div className="font-bold">
+                    {stats?.lastVitals.heart_rate}
+                  </div>
+                  <div className="text-sm text-muted-foreground">bpm</div>
+                </div>
               </div>
-              <div className="text-right">
-                <div className="font-bold">{stats?.lastVitals.heart_rate}</div>
-                <div className="text-sm text-muted-foreground">bpm</div>
-              </div>
-            </div>
 
-            <div className="flex justify-between items-center p-3 border border-muted rounded-lg">
-              <div className="flex items-center space-x-3">
-                <TrendingUp className="h-5 w-5 text-green-500" />
-                <div>
-                  <div className="font-medium">Weight</div>
-                  <div className="text-sm text-muted-foreground">
-                    {formattedDate}
+              <div className="flex justify-between items-center p-3 border border-muted rounded-lg">
+                <div className="flex items-center space-x-3">
+                  <TrendingUp className="h-5 w-5 text-green-500" />
+                  <div>
+                    <div className="font-medium">Weight</div>
+                    <div className="text-sm text-muted-foreground">
+                      {formattedDate}
+                    </div>
                   </div>
                 </div>
+                <div className="text-right">
+                  <div className="font-bold">{stats?.lastVitals.weight}</div>
+                  <div className="text-sm text-muted-foreground">kg</div>
+                </div>
               </div>
-              <div className="text-right">
-                <div className="font-bold">{stats?.lastVitals.weight}</div>
-                <div className="text-sm text-muted-foreground">kg</div>
-              </div>
-            </div>
-          </CardContent>}
+            </CardContent>
+          )}
         </Card>
 
         <Card>

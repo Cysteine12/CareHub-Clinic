@@ -6,13 +6,14 @@ import {
   formatDateParts,
   formatPurposeText,
   formatTimeToAmPm,
-  type Appointment,
 } from '../lib/type'
 import { formatTextWithSize } from '../lib/utils'
 import { getBadgeVariant } from '../features/appointments/util'
+import type { Appointment } from '../features/appointments/types'
+import type { Patient } from '../features/patients/types'
 
 interface AppointmentCardProps {
-  appointment: Appointment
+  appointment: Appointment & { patient: Patient }
 }
 
 export default function AppointmentCard({ appointment }: AppointmentCardProps) {
@@ -71,7 +72,7 @@ export default function AppointmentCard({ appointment }: AppointmentCardProps) {
               </span>
             </div>
             <div className="text-xs italic">
-              {formatTextWithSize(appointment?.notes, 50)}
+              {formatTextWithSize(appointment?.other_purpose, 50)}
             </div>
           </div>
         </div>

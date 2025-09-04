@@ -30,8 +30,6 @@ export const AppointmentStatus = {
   CHECKED_IN: 'CHECKED_IN',
   CANCELLED: 'CANCELLED',
   RESCHEDULED: 'RESCHEDULED',
-  ATTENDING: 'ATTENDING',
-  ATTENDED: 'ATTENDED',
   NO_SHOW: 'NO_SHOW',
   COMPLETED: 'COMPLETED',
   CONFIRMED: 'CONFIRMED',
@@ -105,6 +103,20 @@ const assignProviderSchema = z.object({
 
 export type AssignProviderSchema = z.infer<typeof assignProviderSchema>
 
+export const AppointmentProviderStatus = {
+  ASSIGNED: 'ASSIGNED',
+  ATTENDING: 'ATTENDING',
+  ATTENDED: 'ATTENDED',
+} as const
+
+const updateAppointmentProviderStatusSchema = z.object({
+  status: z.enum(AppointmentProviderStatus, 'Status is invalid'),
+})
+
+export type UpdateAppointmentProviderStatusSchema = z.infer<
+  typeof updateAppointmentProviderStatusSchema
+>
+
 export {
   createPatientAppointmentSchema,
   updatePatientAppointmentSchema,
@@ -113,4 +125,5 @@ export {
   updateAppointmentStatusSchema,
   followUpAppointmentSchema,
   assignProviderSchema,
+  updateAppointmentProviderStatusSchema,
 }

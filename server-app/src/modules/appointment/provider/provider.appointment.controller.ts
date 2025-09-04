@@ -1,4 +1,9 @@
-import { AppointmentStatus, EventType, type Appointment } from '@prisma/client'
+import {
+  AppointmentProviderStatus,
+  AppointmentStatus,
+  EventType,
+  type Appointment,
+} from '@prisma/client'
 import {
   NotFoundError,
   UnauthorizedError,
@@ -10,6 +15,7 @@ import type {
   AssignProviderSchema,
   CreateProviderAppointmentSchema,
   FollowUpAppointmentSchema,
+  UpdateAppointmentProviderStatusSchema,
   UpdateAppointmentStatusSchema,
   UpdateProviderAppointmentSchema,
 } from '../appointment.validation.js'
@@ -217,15 +223,6 @@ const updateAppointmentStatus = catchAsync(async (req, res) => {
   const id = req.params.id
   const { status }: UpdateAppointmentStatusSchema = req.body
 
-  if (
-    provider.roleTitle &&
-    !['ADMIN', 'RECEPTIONIST'].includes(provider.roleTitle)
-  ) {
-    if (!['ATTENDING', 'ATTENDED'].includes(status)) {
-      throw new UnauthorizedError('Not authorized to set this status')
-    }
-  }
-
   const updatedAppointment = await appointmentService.updateAppointment(
     { id },
     {
@@ -294,14 +291,45 @@ const assignAppointmentProvider = catchAsync(async (req, res) => {
     await appointmentProviderService.createAppointmentProvider({
       appointment_id: appointment_id,
       provider_id: provider_id,
+      status: AppointmentProviderStatus.ASSIGNED,
       events: {
         create: {
-          type: EventType.PROVIDER_ASSIGNED,
           appointment_id: appointment_id,
+          type: EventType.PROVIDER_ASSIGNED,
+          status: AppointmentProviderStatus.ASSIGNED,
           created_by_id: user.id,
         },
       },
     })
+  if (!appointment) throw new NotFoundError('Appointment not found')
+
+  return res.status(200).json({
+    success: true,
+    message: 'Appointment provider assigned successfully',
+    data: appointment,
+  })
+})
+
+const updateAppointmentProviderStatus = catchAsync(async (req, res) => {
+  const user = req.user!
+  const { id: appointment_id } = req.params
+  const { status }: UpdateAppointmentProviderStatusSchema = req.body
+
+  const appointment =
+    await appointmentProviderService.updateAppointmentProvider(
+      { appointment_id_provider_id: { appointment_id, provider_id: user.id } },
+      {
+        status,
+        events: {
+          create: {
+            appointment_id: appointment_id,
+            type: EventType.PROVIDER_STATUS_CHANGED,
+            status: status,
+            created_by_id: user.id,
+          },
+        },
+      }
+    )
   if (!appointment) throw new NotFoundError('Appointment not found')
 
   return res.status(200).json({
@@ -394,6 +422,7 @@ export default {
   updateAppointment,
   updateAppointmentStatus,
   assignAppointmentProvider,
+  updateAppointmentProviderStatus,
   followUpAppointment,
   deleteAppointment,
 }

@@ -6,7 +6,10 @@ import {
   CardHeader,
   CardTitle,
 } from '../../../../components/ui/card'
-import type { AppointmentProvider } from '../../types'
+import type {
+  AppointmentProvider,
+  AppointmentProviderStatus,
+} from '../../types'
 import { formatDateParts } from '../../../../lib/type'
 import { Clock, Mail, Phone, User } from 'lucide-react'
 import { Badge } from '../../../../components/ui/badge'
@@ -107,6 +110,7 @@ export default function AppointmentProviderList({
             <AppointmentProviderItem
               key={appointmentProvider?.id}
               provider={appointmentProvider?.provider}
+              providerStatus={appointmentProvider.status}
               assignedAt={appointmentProvider?.created_at}
             />
           ))}
@@ -118,11 +122,13 @@ export default function AppointmentProviderList({
 
 type AppointmentProviderCardProps = {
   provider: Provider | undefined
+  providerStatus: AppointmentProviderStatus
   assignedAt: string | undefined
 }
 
 const AppointmentProviderItem = ({
   provider,
+  providerStatus,
   assignedAt,
 }: AppointmentProviderCardProps) => {
   return (
@@ -170,14 +176,17 @@ const AppointmentProviderItem = ({
       </div>
 
       {/* Actions */}
-      {/* <Button
-        size="sm"
-        variant="default"
-        onClick={() => navigate(`/provider/appointments/${provider?.id}`)}
+      <Badge
+        variant={
+          providerStatus === 'ASSIGNED'
+            ? 'outline'
+            : providerStatus === 'ATTENDING'
+            ? 'pending'
+            : 'default'
+        }
       >
-        <Eye />
-        View Details
-      </Button> */}
+        {providerStatus}
+      </Badge>
     </div>
   )
 }

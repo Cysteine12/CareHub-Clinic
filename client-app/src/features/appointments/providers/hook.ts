@@ -10,6 +10,7 @@ import {
   getAppointmentsBySchedule,
   searchAppointmentsByPatientName,
   updateAppointment,
+  updateAppointmentProviderStatus,
   updateAppointmentStatus,
 } from './api'
 import type {
@@ -17,6 +18,7 @@ import type {
   CreateProviderAppointmentSchema,
   FollowUpAppointmentSchema,
   UpdateAppointmentStatusSchema,
+  UpdateAppointmentProviderStatusSchema,
   UpdateProviderAppointmentSchema,
 } from '../schema'
 import { useNavigate } from 'react-router'
@@ -38,17 +40,25 @@ const useAppointmentsBySchedule = (type: string, query: IPagination) => {
   })
 }
 
-const useAppointmentsByPatient = (id: string, query: IPagination) => {
+const useAppointmentsByPatient = (
+  id: string | undefined,
+  query: IPagination
+) => {
   return useQuery({
-    queryFn: () => getAppointmentsByPatient(id, query),
+    queryFn: () => getAppointmentsByPatient(id!, query),
     queryKey: ['appointments', 'patient', id],
+    enabled: !!id,
   })
 }
 
-const useAppointmentsByProvider = (id: string, query: IPagination) => {
+const useAppointmentsByProvider = (
+  id: string | undefined,
+  query: IPagination
+) => {
   return useQuery({
-    queryFn: () => getAppointmentsByProvider(id, query),
+    queryFn: () => getAppointmentsByProvider(id!, query),
     queryKey: ['appointments', 'provider', id],
+    enabled: !!id,
   })
 }
 
@@ -154,6 +164,29 @@ const useAssignAppointmentProvider = (id: string | undefined) => {
   })
 }
 
+const useUpdateAppointmentProviderStatus = () => {
+  const queryClient = useQueryClient()
+  type UpdateAppointmentProviderStatusMutation = {
+    id: string
+    payload: UpdateAppointmentProviderStatusSchema
+  }
+
+  return useMutation({
+    mutationFn: ({ id, payload }: UpdateAppointmentProviderStatusMutation) =>
+      updateAppointmentProviderStatus(id, payload),
+    onSuccess: (data) => {
+      toast.success(data.message)
+      queryClient.invalidateQueries({
+        queryKey: ['appointments', data.data.appointment_id],
+      })
+      return
+    },
+    onError: (data: AxiosError<APIResponse>) => {
+      toast.error(data.response?.data?.message)
+    },
+  })
+}
+
 const useFollowUpAppointment = () => {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -189,5 +222,6 @@ export {
   useUpdateAppointment,
   useUpdateAppointmentStatus,
   useAssignAppointmentProvider,
+  useUpdateAppointmentProviderStatus,
   useFollowUpAppointment,
 }

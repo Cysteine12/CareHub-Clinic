@@ -1,4 +1,5 @@
 import type {
+  AppointmentProviderStatus,
   AppointmentStatus,
   AssignProviderSchema,
   CreatePatientAppointmentSchema,
@@ -43,8 +44,13 @@ export type Appointment = CreatePatientAppointmentSchema & {
   updated_at: string
 }
 
+export type AppointmentProviderStatus =
+  (typeof AppointmentProviderStatus)[keyof typeof AppointmentProviderStatus]
+
 export type AppointmentProvider = AssignProviderSchema & {
   id: string
+  appointment_id: string
+  status: AppointmentProviderStatus
   created_at: string
   updated_at: string
 }

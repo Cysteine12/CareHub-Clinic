@@ -64,6 +64,7 @@ router.patch(
 router.patch(
   '/:id/status',
   authenticate(UserType.PROVIDER),
+  authorize([ProviderRoleTitle.ADMIN, ProviderRoleTitle.RECEPTIONIST]),
   validate(appointmentValidation.updateAppointmentStatusSchema),
   providerAppointmentController.updateAppointmentStatus
 )
@@ -74,6 +75,13 @@ router.patch(
   authorize([ProviderRoleTitle.ADMIN, ProviderRoleTitle.RECEPTIONIST]),
   validate(appointmentValidation.assignProviderSchema),
   providerAppointmentController.assignAppointmentProvider
+)
+
+router.patch(
+  '/:id/provider/status',
+  authenticate(UserType.PROVIDER),
+  validate(appointmentValidation.updateAppointmentProviderStatusSchema),
+  providerAppointmentController.updateAppointmentProviderStatus
 )
 
 router.patch(

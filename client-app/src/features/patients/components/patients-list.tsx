@@ -17,8 +17,8 @@ import { Calendar, Edit, Eye, Mail, Phone } from 'lucide-react'
 import { Avatar, AvatarFallback } from '../../../components/ui/avatar'
 import { differenceInYears } from 'date-fns'
 import type { InsuranceProvider } from '../../insuranceProviders/types'
-import type { Appointment } from '../../../lib/type'
 import { formatDate, formatTextWithSize } from '../../../lib/utils'
+import type { Appointment } from '../../appointments/types'
 
 interface Props {
   searchValue: string

@@ -1,4 +1,8 @@
-import { AppointmentPurpose, AppointmentStatus } from '@prisma/client'
+import {
+  AppointmentProviderStatus,
+  AppointmentPurpose,
+  AppointmentStatus,
+} from '@prisma/client'
 import { z } from 'zod'
 
 const appointmentScheduleSchema = z.object({
@@ -69,6 +73,14 @@ const assignProviderSchema = z.object({
 
 export type AssignProviderSchema = z.infer<typeof assignProviderSchema>
 
+const updateAppointmentProviderStatusSchema = z.object({
+  status: z.enum(AppointmentProviderStatus, 'Status is invalid'),
+})
+
+export type UpdateAppointmentProviderStatusSchema = z.infer<
+  typeof updateAppointmentProviderStatusSchema
+>
+
 export default {
   createPatientAppointmentSchema,
   updatePatientAppointmentSchema,
@@ -77,4 +89,5 @@ export default {
   updateAppointmentStatusSchema,
   followUpAppointmentSchema,
   assignProviderSchema,
+  updateAppointmentProviderStatusSchema,
 }

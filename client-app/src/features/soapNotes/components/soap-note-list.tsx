@@ -23,7 +23,7 @@ const SoapNoteList = ({
       provider={
         appointmentProviders.find(
           (appointmentProvider) =>
-            soapNote.created_by_id === appointmentProvider.id
+            soapNote.created_by_id === appointmentProvider.provider.id
         )?.provider
       }
     />
@@ -46,7 +46,9 @@ const SoapNoteItem = ({ soapNote, provider }: SoapNoteItemProps) => {
               {provider?.first_name || 'Admin'}{' '}
               {provider?.last_name || ' / Receptionist'}
             </span>
-            <Badge variant={'default'}>{provider?.role_title}</Badge>
+            <Badge variant={'default'}>
+              {provider?.role_title?.replace('_', ' ')}
+            </Badge>
           </div>
 
           <div className="text-xs text-muted-foreground space-y-1">
